@@ -1,0 +1,18 @@
+# Dependencies
+**/node_modules/
+
+# Android build outputs
+**/build/
+**/.cxx/
+**/.gradle/
+**/*.apk
+**/*.aab
+
+# IDE & OS files
+**/.idea/
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+.env.local
