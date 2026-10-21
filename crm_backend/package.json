@@ -1,0 +1,45 @@
+{
+  "name": "chalamob-crm-backend",
+  "version": "1.0.0",
+  "description": "ChalaMob CRM: REST API for a phone and repair shop (sales, stock, repairs, reports, team)",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "migrate": "knex migrate:latest --knexfile knexfile.js",
+    "rollback": "knex migrate:rollback --knexfile knexfile.js",
+    "seed": "knex seed:run --knexfile knexfile.js",
+    "start:prod": "knex migrate:latest --knexfile knexfile.js --env production && knex seed:run --knexfile knexfile.js --env production && node src/index.js"
+  },
+  "keywords": [
+    "crm",
+    "pos",
+    "repairs",
+    "express",
+    "postgresql"
+  ],
+  "author": "ChalaMob",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@napi-rs/canvas": "^1.0.11",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.8",
+    "express": "^5.3.0",
+    "helmet": "^8.3.0",
+    "joi": "^18.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "knex": "^3.3.0",
+    "morgan": "^1.12.1",
+    "multer": "^2.4.0",
+    "pdfkit": "^0.20.2",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "private": true
+}
