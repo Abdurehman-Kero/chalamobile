@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Debug builds only: allow plain HTTP so the app can reach Metro and a backend running on your computer. -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
