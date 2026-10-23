@@ -20,6 +20,7 @@ import { InlineNotice } from '../components/InlineNotice';
 import { FormModal } from '../components/FormModal';
 import { CenterModal } from '../components/CenterModal';
 import { Button } from '../components/Button';
+import { ProductThumb } from '../components/ProductThumb';
 import { PAYMENT_LABELS } from '../components/SalesHistorySheet';
 import { TopLoader } from '../components/TopLoader';
 import { formatBr } from '../utils/formatCurrency';
@@ -133,7 +134,7 @@ export default function POSScreen() {
         accessibilityRole="button"
         accessibilityLabel={`${item.name}, ${formatBr(item.selling_price)}, ${out ? 'out of stock' : `${item.stock} in stock`}`}
       >
-        <Text style={styles.cardEmoji}>{item.emoji}</Text>
+        <ProductThumb image={item.primary_image} emoji={item.emoji} size={56} style={styles.cardThumb} />
         <Text style={styles.cardName} numberOfLines={2}>{item.name}</Text>
         <Text style={styles.cardSpec} numberOfLines={1}>{item.specs || item.brand || ' '}</Text>
         <View style={styles.cardFoot}>
@@ -373,7 +374,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6, zIndex: 1,
   },
   qtyBadgeText: { color: colors.white, fontSize: 12, fontWeight: '900' },
-  cardEmoji: { fontSize: 28, marginBottom: 6 },
+  cardThumb: { marginBottom: 6 },
   cardName: { fontSize: 14, fontWeight: '800', color: colors.navy, minHeight: 36 },
   cardSpec: { fontSize: 12, color: colors.text2, marginTop: 2 },
   cardFoot: { marginTop: spacing.sm, paddingTop: spacing.sm, borderTopWidth: 1, borderColor: colors.border },

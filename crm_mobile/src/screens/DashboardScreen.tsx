@@ -8,6 +8,7 @@ import { useAlerts } from '../hooks/useAlerts';
 import { useRole } from '../hooks/useRole';
 import * as dashApi from '../api/dashboard';
 import * as repairsApi from '../api/repairs';
+import * as ordersApi from '../api/orders';
 import { overlayRepairs } from '../offline/overlays';
 import { MetricCard } from '../components/MetricCard';
 import { OfflineBanner } from '../components/OfflineBanner';
@@ -40,11 +41,12 @@ const ACTIONS: Record<string, QuickAction> = {
   product: { icon: '📦', tone: 'blue',   title: 'Add product',  sub: 'Add an item to your stock',    to: 'Stock',   params: { openAdd: true } },
   repair:  { icon: '🔧', tone: 'amber',  title: 'New repair',   sub: 'Register a device for repair', to: 'Repair',  params: { openAdd: true } },
   client:  { icon: '👥', tone: 'purple', title: 'Add client',   sub: 'Save a customer’s details',    to: 'Clients', params: { openAdd: true } },
+  orders:  { icon: '🛍️', tone: 'amber',  title: 'Online orders', sub: 'Orders from the web store',   to: 'Orders' },
   report:  { icon: '🧾', tone: 'red',    title: 'Daily report', sub: 'Sold, repaired and bought today', to: 'Report' },
 };
 const ACTIONS_BY_ROLE = {
-  owner: ['sale', 'product', 'repair', 'client', 'report'],
-  sales: ['sale', 'client'],
+  owner: ['sale', 'orders', 'product', 'repair', 'client', 'report'],
+  sales: ['sale', 'orders', 'client'],
   technician: ['repair'],
 };
 
@@ -57,13 +59,16 @@ export default function DashboardScreen() {
   // The sales desk has no repairs, so there is nothing to fetch for them.
   const repairs = useResource('repairs', () => (isSales ? Promise.resolve([]) : repairsApi.getRepairs()), overlayRepairs);
   const alerts = useAlerts();
+  // Orders waiting for the shop to confirm (not needed by technicians).
+  const orders = useResource('orders', () => (isTechnician ? Promise.resolve({ orders: [], pending: 0 }) : ordersApi.getOrders()));
+  const pendingOrders = orders.data?.pending ?? 0;
 
   const [showActions, setShowActions] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showSales, setShowSales] = useState(false);
   const [showAlerts, setShowAlerts] = useState(false);
 
-  const onRefresh = () => { dash.refresh(); repairs.reload(); alerts.reload(); };
+  const onRefresh = () => { dash.refresh(); repairs.reload(); alerts.reload(); orders.reload(); };
 
   // Pop the alerts open once when there is something new, so it is not missed.
   const popped = useRef(false);
@@ -135,6 +140,23 @@ export default function DashboardScreen() {
             <Text style={styles.avatarText}>{firstName[0]?.toUpperCase()}</Text>
           </TouchableOpacity>
         </View>
+
+        {pendingOrders > 0 && (
+          <TouchableOpacity
+            style={styles.ordersBanner}
+            onPress={() => navigation.navigate('Orders')}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel={`${pendingOrders} new online orders. Open orders`}
+          >
+            <Text style={styles.ordersBannerIcon}>🛍️</Text>
+            <View style={styles.listBody}>
+              <Text style={styles.ordersBannerTitle}>{pendingOrders} new online {pendingOrders === 1 ? 'order' : 'orders'}</Text>
+              <Text style={styles.ordersBannerSub}>Tap to confirm and call the customer</Text>
+            </View>
+            <Text style={styles.chevron}>›</Text>
+          </TouchableOpacity>
+        )}
 
         {dash.loading && !data && <LoadingState variant="home" label="Loading your business…" />}
 
@@ -383,6 +405,13 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bgDeep },
   scroll: { paddingHorizontal: layout.screenX, paddingTop: layout.topGap, paddingBottom: layout.bottomGapFab },
 
+  ordersBanner: {
+    flexDirection: 'row', alignItems: 'center', backgroundColor: tones.amber.bg, borderWidth: 1, borderColor: tones.amber.border,
+    borderRadius: radius.md, padding: spacing.md, marginBottom: spacing.lg,
+  },
+  ordersBannerIcon: { fontSize: 22, marginRight: spacing.md },
+  ordersBannerTitle: { fontSize: 15, fontWeight: '800', color: colors.navy },
+  ordersBannerSub: { fontSize: 12, color: colors.text2, marginTop: 2 },
   greetRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.lg },
   greetText: { flex: 1 },
   greetSub: { fontSize: 13, color: colors.text2, fontWeight: '600' },

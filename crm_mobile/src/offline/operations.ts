@@ -47,7 +47,7 @@ export const OPS: Record<OpType, OpDef> = {
     optimistic: (p, localId): productsApi.Product => ({
       id: localId!, name: p.name, brand: p.brand || null, category: p.category || null, specs: p.specs || null,
       selling_price: p.selling_price, cost_price: p.cost_price ?? null, stock: p.stock ?? 0,
-      notes: p.notes || null, is_published: !!p.is_published, emoji: '📦',
+      notes: p.notes || null, is_published: !!p.is_published, emoji: '📦', primary_image: null,
     }),
     creates: true,
   },

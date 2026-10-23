@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl, Alert, Switch,
 } from 'react-native';
@@ -25,6 +25,8 @@ import { FormModal } from '../components/FormModal';
 import { FormInput } from '../components/FormInput';
 import { OptionPicker } from '../components/OptionPicker';
 import { Button } from '../components/Button';
+import { ProductThumb } from '../components/ProductThumb';
+import { ProductPhotos, ProductPhotosHandle } from '../components/ProductPhotos';
 import { TopLoader } from '../components/TopLoader';
 import { FadeInView, rowDelay } from '../components/FadeInView';
 import { formatBr } from '../utils/formatCurrency';
@@ -77,6 +79,7 @@ export default function InventoryScreen() {
   const [form, setForm] = useState<Form>(EMPTY_FORM);
   const [errors, setErrors] = useState<Partial<Record<keyof Form, string>>>({});
   const [saving, setSaving] = useState(false);
+  const photosRef = useRef<ProductPhotosHandle>(null);
 
   // Restocking: record stock that was just bought.
   const [restockFor, setRestockFor] = useState<Product | null>(null);
@@ -192,6 +195,16 @@ export default function InventoryScreen() {
       const out = editing ? await offline.updateProduct(editing.id, payload) : await offline.createProduct(payload);
       setFormOpen(false);
       toast.success(offline.savedMessage(out, editing ? 'Product updated' : 'Product added'));
+      // Photos picked for a new product are sent now that it exists on the server.
+      if (!editing && !out.queued && out.data?.id != null && !isLocalId(out.data.id)) {
+        try {
+          await photosRef.current?.uploadStaged(out.data.id);
+        } catch (err) {
+          toast.error(getErrorMessage(err, 'Product saved, but its photos could not be uploaded. Open it to add them again.'));
+        }
+      } else if (!editing && out.queued) {
+        toast.info('Saved on this phone. Add photos once it has synced.');
+      }
       reload();
     } catch (err) {
       toast.error(getErrorMessage(err, 'Could not save the product'));
@@ -238,7 +251,7 @@ export default function InventoryScreen() {
         activeOpacity={0.75}
         accessibilityRole={canManageStock ? 'button' : undefined}
       >
-        <View style={styles.emojiTile}><Text style={styles.emoji}>{item.emoji}</Text></View>
+        <ProductThumb image={item.primary_image} emoji={item.emoji} size={48} style={styles.thumb} />
         <View style={styles.rowBody}>
           <Text style={styles.rowName} numberOfLines={1}>{item.name}</Text>
           <Text style={styles.rowSpec} numberOfLines={1}>{[item.brand, item.specs].filter(Boolean).join(' · ') || item.category}</Text>
@@ -344,6 +357,12 @@ export default function InventoryScreen() {
           </TouchableOpacity>
         </View>
 
+        <ProductPhotos
+          ref={photosRef}
+          productId={editing ? editing.id : null}
+          canUploadNow={!editing || !isLocalId(editing.id)}
+        />
+
         <FormInput label="Notes" value={form.notes} onChangeText={v => set('notes', v)} placeholder="Supplier, shelf, colour…" />
 
         <View style={styles.publishBox}>
@@ -390,8 +409,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', backgroundColor: colors.white, borderRadius: radius.md,
     borderWidth: 1, borderColor: colors.border, padding: spacing.md, marginBottom: spacing.md,
   },
-  emojiTile: { width: 48, height: 48, borderRadius: 14, backgroundColor: colors.bgCard2, alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
-  emoji: { fontSize: 24 },
+  thumb: { marginRight: spacing.md },
   rowBody: { flex: 1, marginRight: spacing.sm },
   rowBadge: { marginTop: 6 },
   rowEnd: { alignItems: 'flex-end' },

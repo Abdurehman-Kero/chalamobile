@@ -12,6 +12,7 @@ import LoginScreen from '../screens/LoginScreen';
 import MainTabs from './MainTabs';
 import ReportScreen from '../screens/ReportScreen';
 import TeamScreen from '../screens/TeamScreen';
+import OrdersScreen from '../screens/OrdersScreen';
 
 const Stack = createStackNavigator();
 
@@ -48,6 +49,7 @@ export default function AppNavigator() {
             {/* Owner-only pages, opened from Home and the Account menu */}
             <Stack.Screen name="Report" component={ReportScreen} />
             <Stack.Screen name="Team" component={TeamScreen} />
+            <Stack.Screen name="Orders" component={OrdersScreen} />
           </>
         ) : (
           <Stack.Screen name="Login" component={LoginScreen} options={TransitionPresets.FadeFromBottomAndroid} />
