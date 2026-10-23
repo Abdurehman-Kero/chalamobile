@@ -1,0 +1,5 @@
+# Store text files with LF line endings everywhere, so Windows and Linux agree.
+* text=auto eol=lf
+*.png binary
+*.jar binary
+*.keystore binary
