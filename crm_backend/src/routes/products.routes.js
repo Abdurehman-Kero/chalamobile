@@ -11,6 +11,16 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
+// Photos are held in memory just long enough to hand them to the image host.
+const photos = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024, files: 4 },
+  fileFilter: (req, file, cb) => {
+    if (/^image\/(jpeg|png|webp)$/.test(file.mimetype)) return cb(null, true);
+    cb(Object.assign(new Error('Only JPG, PNG or WebP photos are allowed'), { status: 400 }));
+  },
+});
+
 // Everyone who sells can look at stock; only the owner changes it.
 router.use(auth);
 router.get('/',          allow('owner', 'sales'), ctrl.getAll);
@@ -20,5 +30,8 @@ router.put('/:id',       allow('owner'), ctrl.update);
 router.delete('/:id',    allow('owner'), ctrl.remove);
 router.post('/:id/restock', allow('owner'), ctrl.restock);
 router.post('/:id/image', allow('owner'), upload.single('image'), ctrl.uploadImage);
+router.post('/:id/images', allow('owner'), photos.array('images', 4), ctrl.uploadImages);
+router.delete('/:id/images/:imageId', allow('owner'), ctrl.deleteImage);
+router.put('/:id/images/:imageId/cover', allow('owner'), ctrl.setCover);
 
 module.exports = router;

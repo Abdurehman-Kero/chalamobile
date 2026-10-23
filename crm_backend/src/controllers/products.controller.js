@@ -1,5 +1,8 @@
 const db = require('../db/knex');
 const { LOW_STOCK_AT } = require('../config');
+const images = require('../services/images');
+
+const MAX_IMAGES = 4;
 
 const EMOJI_BY_CATEGORY = {
   Smartphones: '📱',
@@ -56,9 +59,9 @@ exports.getAll = async (req, res) => {
     const products = await query.orderBy('name', 'asc');
 
     const ids = products.map(p => p.id);
-    const images = ids.length ? await db('product_images').whereIn('product_id', ids).where('is_primary', true) : [];
+    const covers = ids.length ? await db('product_images').whereIn('product_id', ids).where('is_primary', true) : [];
     const imageMap = {};
-    images.forEach(img => { imageMap[img.product_id] = img.url; });
+    covers.forEach(img => { imageMap[img.product_id] = img.url; });
     const result = products.map(p => forRole({ ...p, primary_image: imageMap[p.id] || null }, req.user.role));
     res.json({ products: result, total: result.length, low_stock_threshold: LOW_STOCK_AT });
   } catch (err) {
@@ -71,8 +74,9 @@ exports.getOne = async (req, res) => {
   try {
     const product = await db('products').where({ id: req.params.id, is_active: true }).first();
     if (!product) return res.status(404).json({ error: 'Product not found' });
-    const images = await db('product_images').where('product_id', product.id);
-    res.json({ product: forRole({ ...product, images }, req.user.role) });
+    const photos = await db('product_images').where('product_id', product.id)
+      .orderBy([{ column: 'is_primary', order: 'desc' }, 'sort_order', 'id']);
+    res.json({ product: forRole({ ...product, images: photos, primary_image: photos[0] ? photos[0].url : null }, req.user.role) });
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }
@@ -171,6 +175,75 @@ exports.uploadImage = async (req, res) => {
     });
     res.json({ url });
   } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+const orderedPhotos = (productId) =>
+  db('product_images').where({ product_id: productId })
+    .orderBy([{ column: 'is_primary', order: 'desc' }, 'sort_order', 'id']);
+
+// Adds up to MAX_IMAGES photos per product. The first photo becomes the cover.
+exports.uploadImages = async (req, res) => {
+  try {
+    const files = req.files || [];
+    if (!files.length) return res.status(400).json({ error: 'No image file uploaded', code: 'VALIDATION_ERROR' });
+    if (!images.isConfigured()) {
+      return res.status(503).json({ error: 'Photo storage is not set up on the server yet', code: 'IMAGES_NOT_CONFIGURED' });
+    }
+    const product = await db('products').where({ id: req.params.id, is_active: true }).first();
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+
+    const existing = await db('product_images').where({ product_id: product.id }).orderBy('sort_order', 'desc');
+    if (existing.length + files.length > MAX_IMAGES) {
+      return res.status(400).json({ error: `A product can have up to ${MAX_IMAGES} photos`, code: 'VALIDATION_ERROR' });
+    }
+
+    let hasCover = existing.some(i => i.is_primary);
+    let order = existing.length ? existing[0].sort_order + 1 : 0;
+    for (const file of files) {
+      const { url, publicId } = await images.uploadImage(file.buffer);
+      await db('product_images').insert({
+        product_id: product.id, url, public_id: publicId, is_primary: !hasCover, sort_order: order++,
+      });
+      hasCover = true;
+    }
+    res.status(201).json({ images: await orderedPhotos(product.id) });
+  } catch (err) {
+    console.error('[products.uploadImages]', err);
+    res.status(500).json({ error: 'Could not upload the photo', code: 'SERVER_ERROR' });
+  }
+};
+
+exports.deleteImage = async (req, res) => {
+  try {
+    const image = await db('product_images').where({ id: req.params.imageId, product_id: req.params.id }).first();
+    if (!image) return res.status(404).json({ error: 'Photo not found' });
+    await db('product_images').where({ id: image.id }).del();
+    await images.deleteImage(image.public_id);
+    // If the cover was removed, the next photo takes its place.
+    if (image.is_primary) {
+      const next = await db('product_images').where({ product_id: image.product_id }).orderBy(['sort_order', 'id']).first();
+      if (next) await db('product_images').where({ id: next.id }).update({ is_primary: true });
+    }
+    res.status(204).send();
+  } catch (err) {
+    console.error('[products.deleteImage]', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+exports.setCover = async (req, res) => {
+  try {
+    const image = await db('product_images').where({ id: req.params.imageId, product_id: req.params.id }).first();
+    if (!image) return res.status(404).json({ error: 'Photo not found' });
+    await db.transaction(async (trx) => {
+      await trx('product_images').where({ product_id: image.product_id }).update({ is_primary: false });
+      await trx('product_images').where({ id: image.id }).update({ is_primary: true });
+    });
+    res.json({ images: await orderedPhotos(image.product_id) });
+  } catch (err) {
+    console.error('[products.setCover]', err);
     res.status(500).json({ error: 'Server error' });
   }
 };
