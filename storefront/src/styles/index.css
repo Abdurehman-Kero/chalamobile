@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+/*
+  Design tokens. Every colour in the store comes from here, so the whole look can be
+  changed in one place. Warm off-white canvas, white cards, one deep navy brand colour,
+  and a small clay accent used only for badges. No gradients.
+*/
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --color-canvas: #faf9f5;        /* page background */
+  --color-surface: #ffffff;       /* cards, header, inputs */
+  --color-sunken: #f1efe8;        /* image wells, chips, quiet panels */
+  --color-line: #e6e3d8;          /* borders and dividers */
+  --color-line-strong: #cfcbbd;
+
+  --color-ink: #141413;           /* main text */
+  --color-muted: #66655d;         /* secondary text (AA on canvas and white) */
+
+  --color-brand: #1f2a44;         /* buttons, links, active states */
+  --color-brand-hover: #2c3b5f;
+  --color-brand-soft: #e9ecf3;
+
+  --color-accent: #b5532f;        /* small badges only */
+  --color-accent-soft: #f6e8e1;
+
+  --color-ok: #2b7a4b;
+  --color-ok-soft: #e3f1e8;
+  --color-warn: #8a5d0a;
+  --color-warn-soft: #faefd6;
+  --color-danger: #b42318;
+  --color-danger-soft: #fbe9e7;
+
+  --radius-card: 14px;
+  --shadow-card: 0 1px 2px rgb(20 20 19 / 0.04), 0 4px 14px rgb(20 20 19 / 0.05);
+  --shadow-pop: 0 8px 28px rgb(20 20 19 / 0.14);
+}
+
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+img { max-width: 100%; }
+button, a { -webkit-tap-highlight-color: transparent; }
+
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Horizontal rails: swipe on phones, no visible scrollbar. */
+.rail { scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.rail::-webkit-scrollbar { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+@keyframes shimmer { 0% { opacity: 1; } 50% { opacity: 0.55; } 100% { opacity: 1; } }
+.skeleton { background: var(--color-sunken); animation: shimmer 1.4s ease-in-out infinite; border-radius: 10px; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.rise { animation: rise 0.35s ease-out both; }
