@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-do
 import { useQuery } from '@tanstack/react-query';
 import { getCategories, getNotifications, getProducts } from '../../api/shop';
 import { categoryName, useT } from '../../i18n';
-import { SHOP_NAME } from '../../lib/config';
 import { formatBr, productPath } from '../../lib/format';
 import { useAuth } from '../../store/auth';
 import { cartCount, useCart } from '../../store/cart';
@@ -11,21 +10,8 @@ import { Icon } from '../ui/Icon';
 import { Spinner } from '../ui/Spinner';
 import { ProductImage } from '../product/ProductImage';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { Logo } from './Logo';
 import { MobileMenu } from './MobileMenu';
-
-function Logo() {
-  return (
-    <Link to="/" className="flex shrink-0 items-center gap-2.5" aria-label={`${SHOP_NAME}`}>
-      <span className="grid h-9 w-9 place-items-center rounded-[10px] bg-brand text-on-brand">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <rect x="7" y="3" width="10" height="18" rx="2.5" /><path d="M11 18h2" />
-        </svg>
-      </span>
-      {/* On phones only the mark shows, to leave room for the language, cart and Log in. */}
-      <span className="hidden text-lg font-extrabold tracking-tight sm:inline">{SHOP_NAME}</span>
-    </Link>
-  );
-}
 
 function SearchBox() {
   const t = useT();
@@ -233,7 +219,7 @@ export function Header() {
             className="grid h-10 w-10 shrink-0 place-items-center rounded-full hover:bg-sunken md:hidden">
             <Icon name="menu" size={22} />
           </button>
-          <Logo />
+          <Logo markOnPhone />
           <div className="mx-auto hidden w-full max-w-2xl md:block"><SearchBox /></div>
           <nav aria-label={t('header.accountAndCart')} className="ml-auto flex items-center gap-0 sm:gap-1">
             <LanguageSwitcher />

@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LANGS, useLang, useT } from '../../i18n';
-import { SHOP_NAME, SHOP_PHONE, SHOP_PHONE_DISPLAY } from '../../lib/config';
+import { SHOP_PHONE, SHOP_PHONE_DISPLAY } from '../../lib/config';
 import { useAuth } from '../../store/auth';
 import { buttonClass } from '../ui/Button';
+import { Logo } from './Logo';
 import { Icon, type IconName } from '../ui/Icon';
 
 /** The phone menu: every main link in one slide-in panel, so the top of the page stays small. */
@@ -44,14 +45,7 @@ export function MobileMenu({ open, onClose }: { open: boolean; onClose: () => vo
       <button type="button" aria-label={t('header.closeMenu')} onClick={onClose} className="absolute inset-0 bg-ink/50" />
       <div className="absolute inset-y-0 left-0 flex w-[86%] max-w-sm flex-col bg-surface shadow-pop">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <Link to="/" onClick={onClose} className="flex items-center gap-2.5">
-            <span className="grid h-9 w-9 place-items-center rounded-[10px] bg-brand text-on-brand">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <rect x="7" y="3" width="10" height="18" rx="2.5" /><path d="M11 18h2" />
-              </svg>
-            </span>
-            <span className="text-lg font-extrabold tracking-tight">{SHOP_NAME}</span>
-          </Link>
+          <Logo onClick={onClose} />
           <button ref={closeBtn} type="button" onClick={onClose} aria-label={t('header.closeMenu')} className="grid h-10 w-10 place-items-center rounded-full hover:bg-sunken">
             <Icon name="x" />
           </button>

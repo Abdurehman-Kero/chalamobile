@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useT } from '../../i18n';
 import { SHOP_NAME, SHOP_PHONE, SHOP_PHONE_DISPLAY } from '../../lib/config';
 import { Icon } from '../ui/Icon';
+import { Logo } from './Logo';
 
 export function Footer() {
   const t = useT();
@@ -11,14 +12,7 @@ export function Footer() {
     <footer className="mt-12 bg-night text-white sm:mt-16">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-9 sm:grid-cols-2 sm:gap-10 sm:px-6 sm:py-12 lg:grid-cols-3 lg:px-8">
         <div>
-          <Link to="/" className="inline-flex items-center gap-2.5" aria-label={SHOP_NAME}>
-            <span className="grid h-9 w-9 place-items-center rounded-[10px] bg-brand text-on-brand">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <rect x="7" y="3" width="10" height="18" rx="2.5" /><path d="M11 18h2" />
-              </svg>
-            </span>
-            <span className="text-xl font-extrabold tracking-tight">{SHOP_NAME}</span>
-          </Link>
+          <Logo tone="dark" />
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/70">{t('ft.blurb')}</p>
           <a href={`tel:${SHOP_PHONE}`} className={`${link} mt-3 font-semibold text-white`}>
             <Icon name="phone" size={18} className="text-brand" /> {SHOP_PHONE_DISPLAY}
