@@ -27,7 +27,7 @@ const SORTS: { key: Sort; label: Key }[] = [
   { key: 'price_desc', label: 'sort.priceDesc' },
   { key: 'new', label: 'sort.newest' },
 ];
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 48;
 
 const num = (v: string | null) => (v !== null && v !== '' && Number.isFinite(Number(v)) ? Number(v) : undefined);
 
@@ -107,6 +107,12 @@ export default function Shop() {
     initialPageParam: 1,
     getNextPageParam: (last) => (last.has_more ? last.page + 1 : undefined),
   });
+
+  // Show every product: keep asking for the next page until there are no more.
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = query;
+  useEffect(() => {
+    if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const products = query.data?.pages.flatMap(p => p.products) ?? [];
   const total = query.data?.pages[0]?.total ?? 0;
@@ -212,15 +218,7 @@ export default function Shop() {
               {view === 'grid'
                 ? <div className={grid}>{products.map(p => <ProductCard key={p.id} product={p} showSold={tab !== 'new'} />)}</div>
                 : <div className="space-y-2.5 sm:space-y-3">{products.map(p => <ProductCard key={p.id} product={p} row showSold={tab !== 'new'} />)}</div>}
-              <div className="mt-6 space-y-2 text-center sm:mt-8">
-                <p className="text-sm text-muted">{t('list.showing', { shown: products.length, total })}</p>
-                {query.hasNextPage && (
-                  <button type="button" onClick={() => query.fetchNextPage()} disabled={query.isFetchingNextPage}
-                    className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-ink bg-surface text-[15px] font-semibold transition-colors hover:bg-ink hover:text-white disabled:opacity-60">
-                    {query.isFetchingNextPage ? <><Spinner size={18} className="text-current" /> {t('common.loading')}</> : t('list.loadMore')}
-                  </button>
-                )}
-              </div>
+              {query.hasNextPage && <div className="mt-6 flex justify-center sm:mt-8"><Spinner size={28} className="text-ink" /></div>}
             </>
           )}
         </div>

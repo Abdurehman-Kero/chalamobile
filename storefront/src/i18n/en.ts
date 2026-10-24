@@ -93,8 +93,6 @@ export const en = {
   'list.resultsFor': 'Results for "{q}"',
   'list.oneProduct': '1 product',
   'list.nProducts': '{n} products',
-  'list.showing': 'Showing {shown} of {total}',
-  'list.loadMore': 'Load more',
   'list.nothing': 'Nothing found',
   'list.noneFor': 'We couldn\'t find anything for "{q}".',
   'list.noMatch': 'No products match these filters.',

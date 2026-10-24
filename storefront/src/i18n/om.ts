@@ -91,8 +91,6 @@ export const om: Dict = {
   'list.resultsFor': "Bu'aa \"{q}\"",
   'list.oneProduct': 'Meeshaa 1',
   'list.nProducts': 'Meeshaalee {n}',
-  'list.showing': '{total} keessaa {shown} agarsiifameera',
-  'list.loadMore': "Dabalataan fe'i",
   'list.nothing': 'Homaatu hin argamne',
   'list.noneFor': 'Waan "{q}" jedhu hin arginu.',
   'list.noMatch': 'Meeshaan calaltuu kana waliin wal simu hin jiru.',

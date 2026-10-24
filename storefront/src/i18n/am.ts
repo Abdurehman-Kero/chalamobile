@@ -91,8 +91,6 @@ export const am: Dict = {
   'list.resultsFor': 'የ"{q}" ውጤቶች',
   'list.oneProduct': '1 ምርት',
   'list.nProducts': '{n} ምርቶች',
-  'list.showing': 'ከ{total} ውስጥ {shown} በመታየት ላይ',
-  'list.loadMore': 'ተጨማሪ ጫን',
   'list.nothing': 'ምንም አልተገኘም',
   'list.noneFor': 'ለ"{q}" ምንም ማግኘት አልቻልንም።',
   'list.noMatch': 'ከእነዚህ ማጣሪያዎች ጋር የሚመሳሰል ምርት የለም።',
