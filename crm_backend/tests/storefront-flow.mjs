@@ -1,10 +1,12 @@
 // End-to-end check of the web store API and the order flow. Needs a running server and a
-// freshly seeded database:  node tests/storefront-flow.mjs   (edit B below for the port).
+// freshly seeded database:  node tests/storefront-flow.mjs   (edit B below for the port; the test customer is created automatically).
 const B='http://localhost:3055/api';
 const j=async(p,o={})=>{const r=await fetch(B+p,{...o,headers:{'content-type':'application/json',...(o.headers||{})},body:o.body?JSON.stringify(o.body):undefined});let b=null;try{b=await r.json()}catch{}return {s:r.status,b}};
 const ok=(n,c,x)=>console.log(c?'PASS':'FAIL',n,c?'':JSON.stringify(x));
 const login=await j('/auth/login',{method:'POST',body:{email:'admin@chalamobile.com',password:'admin123'}});
 const staff={authorization:'Bearer '+login.b.token};
+// The test customer is created on the first run and signed in on later runs.
+await j('/public/auth/register',{method:'POST',body:{name:'Test Buyer',phone:'0911234567',password:'secret1'}});
 const reg=await j('/public/auth/login',{method:'POST',body:{phone:'0911234567',password:'secret1'}});
 const shop={authorization:'Bearer '+reg.b.token};
 // token isolation

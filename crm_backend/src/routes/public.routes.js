@@ -19,12 +19,15 @@ const limiter = (max, windowMinutes, message) => rateLimit({
 const authLimit = limiter(20, 15, 'Too many attempts. Please wait a few minutes and try again.');
 const orderLimit = limiter(15, 60, 'Too many orders from this connection. Please call the shop.');
 
+// What is on sale changes slowly, so a browser may reuse an answer for a short while.
+const brief = (req, res, next) => { res.set('Cache-Control', 'public, max-age=20, stale-while-revalidate=40'); next(); };
+
 // Browsing: no account needed.
-router.get('/home',          ctrl.home);
-router.get('/categories',    ctrl.categories);
-router.get('/filters',       ctrl.filters);
-router.get('/products',      ctrl.listProducts);
-router.get('/products/:id',  ctrl.getProduct);
+router.get('/home', brief,          ctrl.home);
+router.get('/categories', brief,    ctrl.categories);
+router.get('/filters', brief,       ctrl.filters);
+router.get('/products', brief,      ctrl.listProducts);
+router.get('/products/:id', brief,  ctrl.getProduct);
 
 // Accounts.
 router.post('/auth/register', authLimit, ctrl.register);

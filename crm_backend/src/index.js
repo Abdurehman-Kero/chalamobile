@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors    = require('cors');
 const helmet  = require('helmet');
+const compression = require('compression');
 const morgan  = require('morgan');
 const path    = require('path');
 
@@ -11,7 +12,8 @@ const app = express();
 app.set('trust proxy', 1);       // behind the host's proxy: rate limits need the real client address
 // Photos are shown on the web store, which is a different origin from this server.
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
-app.use(morgan('dev'));
+app.use(compression());   // smaller answers: faster on a phone with a weak connection
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'tiny' : 'dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
