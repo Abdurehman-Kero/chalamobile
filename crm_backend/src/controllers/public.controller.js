@@ -292,9 +292,13 @@ exports.createOrder = async (req, res) => {
       const lines = [];
       for (const [productId, qty] of wanted) {
         const p = products.find(x => x.id === productId);
-        if (!p) throw new HttpError(400, 'One of the items in your cart is no longer available');
+        if (!p) throw new HttpError(400, 'One of the items in your cart is no longer available', { reason: 'unavailable' });
         if (p.stock < qty) {
-          throw new HttpError(400, p.stock > 0 ? `Only ${p.stock} left of ${p.name}` : `${p.name} is sold out`);
+          throw new HttpError(
+            400,
+            p.stock > 0 ? `Only ${p.stock} left of ${p.name}` : `${p.name} is sold out`,
+            p.stock > 0 ? { reason: 'low_stock', name: p.name, left: p.stock } : { reason: 'sold_out', name: p.name },
+          );
         }
         // The price always comes from the database; whatever the browser sent is ignored.
         lines.push({ product_id: p.id, product_name: p.name, qty, unit_price: Number(p.selling_price) });
@@ -326,7 +330,7 @@ exports.createOrder = async (req, res) => {
 
     res.status(201).json({ order: (await withItems([order]))[0] });
   } catch (err) {
-    if (err instanceof HttpError) return res.status(err.status).json({ error: err.message, code: 'ORDER_REJECTED' });
+    if (err instanceof HttpError) return res.status(err.status).json({ error: err.message, code: 'ORDER_REJECTED', ...(err.extra || {}) });
     console.error('[public.createOrder]', err);
     res.status(500).json({ error: 'Server error', code: 'SERVER_ERROR' });
   }

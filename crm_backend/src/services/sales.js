@@ -4,7 +4,7 @@
 // A failed check inside a transaction is thrown as an HttpError so the transaction
 // rolls back exactly once and the client gets a clear message.
 class HttpError extends Error {
-  constructor(status, message) { super(message); this.status = status; }
+  constructor(status, message, extra) { super(message); this.status = status; this.extra = extra; }
 }
 
 async function recordSale(trx, { customer, customerName, paymentMethod, items, userId, occurredAt }) {
