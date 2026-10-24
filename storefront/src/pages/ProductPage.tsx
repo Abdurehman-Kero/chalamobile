@@ -25,11 +25,11 @@ function Gallery({ product }: { product: ProductDetail }) {
 
   return (
     <div>
-      <div className="overflow-hidden rounded-3xl border border-line bg-sunken">
+      <div className="overflow-hidden rounded-3xl border border-line">
         <ProductImage
           key={current?.url} src={current?.url || null} alt={product.name} width={1000} eager
           sizes="(min-width: 1024px) 50vw, 100vw"
-          className="aspect-square w-full bg-transparent p-4 sm:p-8"
+          className="aspect-square w-full"
         />
       </div>
       {images.length > 1 && (
@@ -38,9 +38,9 @@ function Gallery({ product }: { product: ProductDetail }) {
             <button
               key={img.id} type="button" role="tab" aria-selected={i === index} aria-label={`Photo ${i + 1} of ${images.length}`}
               onClick={() => setIndex(i)}
-              className={`h-16 w-16 overflow-hidden rounded-xl border-2 bg-sunken sm:h-20 sm:w-20 ${i === index ? 'border-brand' : 'border-transparent hover:border-line-strong'}`}
+              className={`h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 sm:h-20 sm:w-20 ${i === index ? 'border-brand' : 'border-transparent hover:border-line-strong'}`}
             >
-              <ProductImage src={img.url} alt="" width={160} className="h-full w-full bg-transparent p-1" />
+              <ProductImage src={img.url} alt="" width={160} className="h-full w-full" />
             </button>
           ))}
         </div>
@@ -135,8 +135,11 @@ export default function ProductPage() {
               <StockBadge state={product.stock} />
             </div>
 
-            <div className="mt-6 hidden items-end gap-4 lg:flex">
+            <div className="mt-5">
               <QtyStepper qty={qty} setQty={setQty} disabled={out} />
+            </div>
+
+            <div className="mt-5 hidden gap-3 lg:flex">
               <Button size="lg" className="flex-1" onClick={addToCart} disabled={out}>
                 <Icon name="cart" size={19} /> {out ? 'Sold out' : 'Add to cart'}
               </Button>
@@ -165,10 +168,9 @@ export default function ProductPage() {
 
       {/* Phones: the buying actions stay within thumb reach. */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 lg:hidden">
-        <div className="mx-auto flex max-w-xl items-center gap-2">
-          <QtyStepper qty={qty} setQty={setQty} disabled={out} compact />
-          <Button className="flex-1 whitespace-nowrap px-3" size="lg" onClick={addToCart} disabled={out}>{out ? 'Sold out' : 'Add to cart'}</Button>
-          <Button variant="secondary" size="lg" className="px-4" onClick={buyNow} disabled={out}>Buy</Button>
+        <div className="mx-auto flex max-w-xl items-center gap-2.5">
+          <Button className="min-w-0 flex-1 whitespace-nowrap px-3" size="lg" onClick={addToCart} disabled={out}>{out ? 'Sold out' : 'Add to cart'}</Button>
+          <Button variant="secondary" size="lg" className="shrink-0 whitespace-nowrap px-5" onClick={buyNow} disabled={out}>Buy now</Button>
         </div>
       </div>
     </div>

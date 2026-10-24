@@ -71,7 +71,7 @@ function SearchBox() {
         onChange={e => { setValue(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
         onKeyDown={e => { if (e.key === 'Escape') setOpen(false); }}
-        placeholder="Search phones, laptops, routers…"
+        placeholder="Search phones, laptops…"
         className="h-11 w-full rounded-xl border border-line-strong bg-canvas pl-11 pr-4 text-[15px] placeholder:text-muted focus:border-brand focus:bg-surface"
       />
       {showList && (

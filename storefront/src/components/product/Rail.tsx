@@ -21,7 +21,7 @@ export function Rail({ title, subtitle, seeAllTo, children }: Props) {
   };
 
   return (
-    <section className="mt-10 sm:mt-12" aria-label={title}>
+    <section className="mx-auto mt-10 w-full max-w-7xl sm:mt-12" aria-label={title}>
       <div className="mb-3 flex items-end justify-between gap-3 px-4 sm:px-6 lg:px-8">
         <div className="min-w-0">
           <h2 className="text-xl font-bold tracking-tight sm:text-2xl">{title}</h2>

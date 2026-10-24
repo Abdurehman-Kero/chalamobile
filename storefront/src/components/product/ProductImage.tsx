@@ -9,13 +9,21 @@ interface Props {
   width?: number;
   sizes?: string;
   eager?: boolean;
+  /** Size, shape and rounding of the frame, e.g. "aspect-square w-full rounded-xl". */
   className?: string;
+  /** Extra classes for the photo itself, e.g. a hover zoom. */
+  imgClassName?: string;
 }
 
 const WIDTHS = [240, 400, 640, 960, 1400];
 
-/** A product photo, or a calm placeholder when there is none (or it cannot load). */
-export function ProductImage({ src, alt, width = 640, sizes, eager = false, className = '' }: Props) {
+/**
+ * A product photo in a fixed frame. Photos come in every shape, so the whole photo is shown
+ * (never cropped) over a soft blurred copy of itself that fills the rest of the frame. Every
+ * card then has the same shape and nothing looks cut off or boxed in. Without a photo, or if
+ * it cannot load, a calm placeholder shows instead.
+ */
+export function ProductImage({ src, alt, width = 640, sizes, eager = false, className = '', imgClassName = '' }: Props) {
   const [failed, setFailed] = useState(false);
 
   if (!src || failed) {
@@ -26,15 +34,21 @@ export function ProductImage({ src, alt, width = 640, sizes, eager = false, clas
     );
   }
   return (
-    <img
-      src={photoUrl(src, width)}
-      srcSet={photoSrcSet(src, WIDTHS)}
-      sizes={sizes}
-      alt={alt}
-      loading={eager ? 'eager' : 'lazy'}
-      decoding="async"
-      onError={() => setFailed(true)}
-      className={`bg-sunken object-contain ${className}`}
-    />
+    <div className={`relative overflow-hidden bg-sunken ${className}`}>
+      <img
+        src={photoUrl(src, 64)} alt="" aria-hidden="true" loading="lazy" decoding="async"
+        className="absolute inset-0 h-full w-full scale-125 object-cover opacity-70 blur-2xl"
+      />
+      <img
+        src={photoUrl(src, width)}
+        srcSet={photoSrcSet(src, WIDTHS)}
+        sizes={sizes}
+        alt={alt}
+        loading={eager ? 'eager' : 'lazy'}
+        decoding="async"
+        onError={() => setFailed(true)}
+        className={`relative h-full w-full object-contain ${imgClassName}`}
+      />
+    </div>
   );
 }

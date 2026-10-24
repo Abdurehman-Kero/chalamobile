@@ -16,8 +16,8 @@ export function CategoryBar() {
     }`;
 
   return (
-    <nav aria-label="Categories" className="mx-auto max-w-7xl">
-      <div className="rail flex gap-2 overflow-x-auto px-4 py-3 sm:px-6 lg:px-8">
+    <nav aria-label="Categories" className="mx-auto w-full max-w-7xl min-w-0">
+      <div className="rail flex gap-2 overflow-x-auto px-4 py-3.5 sm:px-6 lg:px-8">
         <Link to="/shop" className={chip(active === '')}>All products</Link>
         {isPending
           ? Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-10 w-28 shrink-0 rounded-full" />)

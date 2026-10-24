@@ -53,13 +53,13 @@ export function ProductExplorer({ title, subtitle, q, category, initialTab = 'al
 
   return (
     <section id="explore" className="mt-12 scroll-mt-24 sm:mt-14" aria-label={title}>
-      <div className="px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <h2 className="text-xl font-bold tracking-tight sm:text-2xl">{title}</h2>
         {subtitle && <p className="mt-0.5 text-sm text-muted">{subtitle}</p>}
       </div>
 
       <div className="sticky top-[var(--header-h,0px)] z-20 mt-3 border-b border-line bg-canvas/95 backdrop-blur">
-        <div className="flex items-center gap-2 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex w-full max-w-7xl items-center gap-2 px-4 sm:px-6 lg:px-8">
           <div role="tablist" aria-label="Product views" className="rail flex flex-1 gap-1 overflow-x-auto">
             {TABS.map(t => (
               <button
@@ -86,7 +86,7 @@ export function ProductExplorer({ title, subtitle, q, category, initialTab = 'al
         </div>
       </div>
 
-      <div role="tabpanel" className="px-4 pt-5 sm:px-6 lg:px-8">
+      <div role="tabpanel" className="mx-auto w-full max-w-7xl px-4 pt-5 sm:px-6 lg:px-8">
         {tab === 'all' && (
           <div className="mb-4 flex items-center justify-between sm:hidden">
             <p className="text-sm text-muted">{query.isPending ? 'Loading…' : `${total} ${total === 1 ? 'product' : 'products'}`}</p>

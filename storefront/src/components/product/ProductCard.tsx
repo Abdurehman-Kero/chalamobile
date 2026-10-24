@@ -15,6 +15,8 @@ interface Props {
   rail?: boolean;
 }
 
+const RAIL = 'w-[46vw] max-w-[230px] shrink-0 snap-start sm:w-[210px] lg:w-[230px]';
+
 export function ProductCard({ product, showSold = false, rail = false }: Props) {
   const add = useCart(s => s.add);
   const show = useToast(s => s.show);
@@ -27,27 +29,28 @@ export function ProductCard({ product, showSold = false, rail = false }: Props) 
 
   return (
     <article
-      className={`group relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface shadow-card transition-shadow hover:shadow-pop ${rail ? 'w-[44vw] max-w-[220px] shrink-0 snap-start sm:w-[200px] lg:w-[220px]' : ''}`}
+      className={`group relative flex min-w-0 flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-all duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-pop ${rail ? RAIL : ''}`}
     >
       <Link to={productPath(product.id)} className="flex flex-1 flex-col" aria-label={`${product.name}, ${formatBr(product.price)}`}>
-        <div className="relative aspect-square">
+        <div className="relative">
           <ProductImage
             src={product.image} alt="" width={400}
             sizes="(min-width: 1024px) 240px, (min-width: 640px) 30vw, 46vw"
-            className={`h-full w-full p-2 transition-transform duration-300 group-hover:scale-[1.03] ${out ? 'opacity-60' : ''}`}
+            className={`aspect-square w-full ${out ? 'opacity-60' : ''}`}
+            imgClassName="transition-transform duration-300 group-hover:scale-[1.04]"
           />
           <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
             {showSold && product.sold > 0 && !out && (
-              <span className="rounded-md bg-accent px-2 py-0.5 text-[11px] font-semibold text-white">Top selling</span>
+              <span className="rounded-md bg-accent px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">Top selling</span>
             )}
             <StockBadge state={product.stock} compact />
           </div>
         </div>
-        <div className="flex flex-1 flex-col px-3 pb-3 pt-2.5">
-          {product.brand && <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">{product.brand}</p>}
-          <h3 className="mt-0.5 line-clamp-2 min-h-[2.5rem] text-sm font-semibold leading-5">{product.name}</h3>
-          {product.specs && <p className="mt-0.5 truncate text-xs text-muted">{product.specs}</p>}
-          <p className="mt-2 text-base font-bold">{formatBr(product.price)}</p>
+        <div className="flex flex-1 flex-col px-3.5 pb-3.5 pt-3">
+          <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-muted">{product.brand || product.category || ' '}</p>
+          <h3 className="mt-0.5 line-clamp-2 min-h-[2.5rem] text-[15px] font-semibold leading-5">{product.name}</h3>
+          <p className="mt-0.5 truncate text-xs text-muted">{product.specs || ' '}</p>
+          <p className="mt-2.5 pr-12 text-lg font-bold tracking-tight">{formatBr(product.price)}</p>
         </div>
       </Link>
       <button
@@ -55,7 +58,7 @@ export function ProductCard({ product, showSold = false, rail = false }: Props) 
         onClick={quickAdd}
         disabled={out}
         aria-label={out ? `${product.name} is sold out` : `Add ${product.name} to cart`}
-        className="absolute bottom-2.5 right-2.5 grid h-11 w-11 place-items-center rounded-full bg-brand text-white transition-colors hover:bg-brand-hover disabled:bg-line disabled:text-muted"
+        className="absolute bottom-3 right-3 grid h-11 w-11 place-items-center rounded-full bg-brand text-white shadow-sm transition-colors hover:bg-brand-hover disabled:bg-line disabled:text-muted"
       >
         <Icon name={out ? 'x' : 'plus'} size={20} />
       </button>
@@ -65,12 +68,12 @@ export function ProductCard({ product, showSold = false, rail = false }: Props) 
 
 export function ProductCardSkeleton({ rail = false }: { rail?: boolean }) {
   return (
-    <div className={`overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface ${rail ? 'w-[44vw] max-w-[220px] shrink-0 sm:w-[200px] lg:w-[220px]' : ''}`} aria-hidden="true">
+    <div className={`overflow-hidden rounded-2xl border border-line bg-surface ${rail ? RAIL : ''}`} aria-hidden="true">
       <div className="skeleton aspect-square rounded-none" />
-      <div className="space-y-2 p-3">
+      <div className="space-y-2 p-3.5">
         <div className="skeleton h-3 w-1/3" />
         <div className="skeleton h-4 w-5/6" />
-        <div className="skeleton h-4 w-1/2" />
+        <div className="skeleton h-5 w-1/2" />
       </div>
     </div>
   );
