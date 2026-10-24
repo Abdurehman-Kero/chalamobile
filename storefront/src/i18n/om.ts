@@ -318,6 +318,9 @@ export const om: Dict = {
   'nf.home': "Gara fuula duraatti deebi'i",
   'toast.added': '{name} kaartii keessanitti dabalameera',
   'toast.viewCart': 'Kaartii ilaali',
+  'common.reload': "Fuula irra deebi'ii fe'i",
+  'crash.title': 'Rakkoon uumame',
+  'crash.text': "Fuulli kun rakkoo muudateera. Maaloo irra deebi'ii fe'aa. Yoo itti fufe, {phone} bilbilaa.",
 
   'time.now': 'Amma',
   'time.min': 'daqiiqaa {n} dura',

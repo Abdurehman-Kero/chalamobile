@@ -3,16 +3,33 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#FAF9F5" />
-    <meta name="description" content="Chala Mobile: phones, laptops, routers and accessories. Order online and we will confirm by phone." />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="description" content="Chala Mobile: phones, laptops, routers and accessories. Order online and we confirm by phone." />
+
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- How a link to the store looks when it is shared -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Chala Mobile" />
+    <meta property="og:title" content="Chala Mobile: phones, laptops and accessories" />
+    <meta property="og:description" content="Order online and we confirm by phone. Pay with Telebirr, CBE or cash." />
+    <meta property="og:locale" content="en_ET" />
+    <meta name="twitter:card" content="summary_large_image" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Ethiopic:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <title>Chala Mobile</title>
+
+    <script type="application/ld+json">
+      {"@context":"https://schema.org","@type":"Store","name":"Chala Mobile","telephone":"+251911720282","description":"Phones, laptops, routers and accessories, and phone repairs.","priceRange":"Br"}
+    </script>
+    <title>Chala Mobile: phones, laptops and accessories</title>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>Chala Mobile needs JavaScript to show the shop. You can also call us on +251 911 720 282.</noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

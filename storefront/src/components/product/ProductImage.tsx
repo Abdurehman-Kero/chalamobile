@@ -45,6 +45,7 @@ export function ProductImage({ src, alt, width = 640, sizes, eager = false, clas
         sizes={sizes}
         alt={alt}
         loading={eager ? 'eager' : 'lazy'}
+        fetchPriority={eager ? 'high' : undefined}
         decoding="async"
         onError={() => setFailed(true)}
         className={`relative h-full w-full object-contain ${imgClassName}`}

@@ -1,0 +1,9 @@
+# Customers can find the shop and its products. Pages that belong to one person are not for search engines.
+User-agent: *
+Allow: /
+Disallow: /cart
+Disallow: /checkout
+Disallow: /orders
+Disallow: /notifications
+Disallow: /login
+Disallow: /register

@@ -329,6 +329,9 @@ export const en = {
   'nf.home': 'Go to the home page',
   'toast.added': '{name} added to your cart',
   'toast.viewCart': 'View cart',
+  'common.reload': 'Reload the page',
+  'crash.title': 'Something went wrong',
+  'crash.text': 'The page ran into a problem. Please reload it. If it keeps happening, call us on {phone}.',
 
   // Time
   'time.now': 'Just now',

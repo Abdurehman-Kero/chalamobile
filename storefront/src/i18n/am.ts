@@ -318,6 +318,9 @@ export const am: Dict = {
   'nf.home': 'ወደ መነሻ ገጽ ሂድ',
   'toast.added': '{name} ወደ ጋሪዎ ተጨምሯል',
   'toast.viewCart': 'ጋሪውን እይ',
+  'common.reload': 'ገጹን እንደገና ጫን',
+  'crash.title': 'የሆነ ችግር ተፈጥሯል',
+  'crash.text': 'ገጹ ችግር አጋጥሞታል። እባክዎ ገጹን እንደገና ይጫኑ። ችግሩ ከቀጠለ ወደ {phone} ይደውሉ።',
 
   'time.now': 'አሁን',
   'time.min': 'ከ{n} ደቂቃ በፊት',
