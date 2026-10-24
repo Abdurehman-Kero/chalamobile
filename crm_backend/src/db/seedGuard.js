@@ -6,7 +6,7 @@
 // which wipes the demo tables first, in an order the foreign keys allow.
 
 const WIPE_ORDER = [
-  'idempotency_keys', 'sale_items', 'sales', 'purchases', 'product_images',
+  'idempotency_keys', 'notifications', 'order_items', 'orders', 'shop_accounts', 'sale_items', 'sales', 'purchases', 'product_images',
   'repairs', 'products', 'customers', 'users',
 ];
 

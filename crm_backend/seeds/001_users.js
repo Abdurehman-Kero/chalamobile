@@ -1,12 +1,11 @@
 const bcrypt = require('bcryptjs');
+const { shouldSeed } = require('../src/db/seedGuard');
 
 exports.seed = async (knex) => {
+  // Demo accounts are only added to an empty table. This runs on every deploy, so it must
+  // never wipe real users (and, through them, sales, repairs and orders) or reset passwords.
+  if (!(await shouldSeed(knex, 'users'))) return;
   const isPg = knex.client.config.client === 'pg' || knex.client.config.client === 'postgresql' || knex.client.driverName === 'pg';
-  if (isPg) {
-    await knex.raw('TRUNCATE TABLE users CASCADE');
-  } else {
-    await knex('users').del();
-  }
 
   const hash = await bcrypt.hash('admin123', 10);
   const users = [

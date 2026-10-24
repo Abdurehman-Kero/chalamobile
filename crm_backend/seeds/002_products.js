@@ -1,12 +1,10 @@
 // All 33 real products from owner_prototype/products.html
+const { shouldSeed } = require('../src/db/seedGuard');
+
 exports.seed = async (knex) => {
-  const isPg = knex.client.config.client === 'pg' || knex.client.config.client === 'postgresql' || knex.client.driverName === 'pg';
-  if (isPg) {
-    await knex.raw('TRUNCATE TABLE product_images, products CASCADE');
-  } else {
-    await knex('product_images').del();
-    await knex('products').del();
-  }
+  // Only fills an empty table. This runs on every deploy, so it must never delete real
+  // products (a TRUNCATE ... CASCADE here also erased sale items, purchases and photos).
+  if (!(await shouldSeed(knex, 'products'))) return;
 
   await knex('products').insert([
     // Laptops/PC
