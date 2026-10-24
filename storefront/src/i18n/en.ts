@@ -314,10 +314,10 @@ export const en = {
 
   // Messages and errors
   'err.title': 'We couldn\'t load this',
-  'err.network': 'We could not reach the shop server. If your internet is fine, it may be waking up: please try again in a moment.',
-  'err.updating': 'The shop server is being updated. Please try again in a few minutes.',
+  'err.network': "We couldn't connect. Please check your internet connection and try again.",
+  'err.updating': 'We are making some improvements. Please try again in a few minutes.',
   'err.tooMany': 'Too many attempts. Please wait a few minutes.',
-  'err.server': 'The shop server had a problem. Please try again in a moment.',
+  'err.server': 'Something went wrong on our side. Please try again in a moment.',
   'err.generic': 'Something went wrong. Please try again.',
   'err.invalidCreds': 'Wrong phone number or password',
   'err.phoneTaken': 'An account with this phone number already exists. Please sign in.',
@@ -325,7 +325,7 @@ export const en = {
   'err.unavailable': 'One of the items in your cart is no longer available',
   'err.low': 'Only {left} left of {name}',
   'err.soldOut': '{name} is sold out',
-  'slow.hint': 'Waking up the shop server. The first visit can take up to a minute, thanks for your patience.',
+  'slow.hint': 'This is taking a little longer than usual. Thank you for your patience.',
   'nf.title': 'We can\'t find that page',
   'nf.text': 'The link may be old or mistyped.',
   'nf.home': 'Go to the home page',

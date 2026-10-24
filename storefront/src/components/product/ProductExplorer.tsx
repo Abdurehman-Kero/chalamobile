@@ -5,8 +5,9 @@ import { errorMessage } from '../../api/client';
 import { useT, type Key } from '../../i18n';
 import type { Sort, Tab } from '../../types';
 import { Button } from '../ui/Button';
-import { EmptyState, ErrorState, SlowHint, useSlowHint } from '../ui/States';
-import { ProductCard, ProductCardSkeleton } from './ProductCard';
+import { Spinner } from '../ui/Spinner';
+import { EmptyState, ErrorState, PageLoader } from '../ui/States';
+import { ProductCard } from './ProductCard';
 
 const TABS: { key: Tab; label: Key }[] = [
   { key: 'all', label: 'tab.all' },
@@ -48,7 +49,6 @@ export function ProductExplorer({ title, subtitle, q, category, initialTab = 'al
     initialPageParam: 1,
     getNextPageParam: (last) => (last.has_more ? last.page + 1 : undefined),
   });
-  const slow = useSlowHint(query.isPending);
 
   const products = query.data?.pages.flatMap(p => p.products) ?? [];
   const total = query.data?.pages[0]?.total ?? 0;
@@ -96,12 +96,7 @@ export function ProductExplorer({ title, subtitle, q, category, initialTab = 'al
         )}
 
         {query.isPending ? (
-          <>
-            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
-              {Array.from({ length: 8 }, (_, i) => <ProductCardSkeleton key={i} />)}
-            </div>
-            <SlowHint show={slow} />
-          </>
+          <PageLoader compact />
         ) : query.isError ? (
           <ErrorState message={errorMessage(query.error)} onRetry={() => query.refetch()} />
         ) : products.length === 0 ? (
@@ -119,8 +114,8 @@ export function ProductExplorer({ title, subtitle, q, category, initialTab = 'al
               <p className="text-sm text-muted">{t('list.showing', { shown: products.length, total })}</p>
               {query.hasNextPage && (
                 <button type="button" onClick={() => query.fetchNextPage()} disabled={query.isFetchingNextPage}
-                  className="min-h-12 w-full rounded-xl border border-ink bg-surface text-[15px] font-semibold transition-colors hover:bg-ink hover:text-white disabled:opacity-60">
-                  {query.isFetchingNextPage ? t('common.loading') : t('list.loadMore')}
+                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-ink bg-surface text-[15px] font-semibold transition-colors hover:bg-ink hover:text-white disabled:opacity-60">
+                  {query.isFetchingNextPage ? <><Spinner size={18} className="text-current" /> {t('common.loading')}</> : t('list.loadMore')}
                 </button>
               )}
             </div>

@@ -8,6 +8,7 @@ import { formatBr, productPath } from '../../lib/format';
 import { useAuth } from '../../store/auth';
 import { cartCount, useCart } from '../../store/cart';
 import { Icon } from '../ui/Icon';
+import { Spinner } from '../ui/Spinner';
 import { ProductImage } from '../product/ProductImage';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { MobileMenu } from './MobileMenu';
@@ -102,7 +103,7 @@ function SearchBox() {
       {showList && (
         <div className="absolute inset-x-0 top-[calc(100%+6px)] z-40 overflow-hidden rounded-2xl border border-line bg-surface shadow-pop">
           {suggestions.isPending ? (
-            <p className="px-4 py-3 text-sm text-muted">{t('header.searching')}</p>
+            <p className="flex items-center gap-2.5 px-4 py-3 text-sm text-muted"><Spinner size={16} className="text-ink" label={t('header.searching')} /> {t('header.searching')}</p>
           ) : items.length === 0 ? (
             <p className="px-4 py-3 text-sm text-muted">{t('header.noMatches', { q: debounced })}</p>
           ) : (

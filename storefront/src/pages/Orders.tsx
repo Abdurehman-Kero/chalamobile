@@ -5,7 +5,7 @@ import { errorMessage } from '../api/client';
 import { useT } from '../i18n';
 import { formatBr, timeAgo } from '../lib/format';
 import { buttonClass } from '../components/ui/Button';
-import { EmptyState, ErrorState, Skeleton } from '../components/ui/States';
+import { EmptyState, ErrorState, PageLoader } from '../components/ui/States';
 import { PageHeader } from '../components/ui/PageHeader';
 import { Seo } from '../components/ui/Seo';
 import { StatusBadge } from '../components/ui/StatusBadge';
@@ -20,7 +20,7 @@ export default function Orders() {
       <PageHeader title={t('orders.title')} fallback="/" />
 
       {isPending ? (
-        <div className="mt-5 space-y-3">{Array.from({ length: 3 }, (_, i) => <Skeleton key={i} className="h-28" />)}</div>
+        <PageLoader compact />
       ) : isError ? (
         <ErrorState message={errorMessage(error)} onRetry={() => refetch()} />
       ) : data.length === 0 ? (

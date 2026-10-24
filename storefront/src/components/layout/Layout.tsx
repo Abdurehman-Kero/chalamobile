@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useT } from '../../i18n';
 import { AnnouncementBar } from './AnnouncementBar';
@@ -7,6 +7,8 @@ import { SubNav } from './SubNav';
 import { Footer } from './Footer';
 import { BackToTop } from './BackToTop';
 import { Toaster } from './Toaster';
+import { TopProgress } from './TopProgress';
+import { PageLoader } from '../ui/States';
 
 // Browsing pages show the main links.
 // Checkout and sign-in stay calm and uncluttered.
@@ -27,11 +29,17 @@ export function Layout() {
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-brand focus:px-4 focus:py-2 focus:text-on-brand">
         {t('common.skip')}
       </a>
+      <TopProgress />
       <AnnouncementBar />
       <Header />
       {!CALM.has(pathname) && <SubNav />}
       <main id="main" className="flex-1">
-        <Outlet />
+        {/* Only this area changes between pages: the header and footer stay put, and the new page eases in. */}
+        <Suspense fallback={<PageLoader />}>
+          <div key={pathname} className="page-in">
+            <Outlet />
+          </div>
+        </Suspense>
       </main>
       <Footer />
       <BackToTop />

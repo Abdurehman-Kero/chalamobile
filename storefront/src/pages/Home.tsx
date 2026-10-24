@@ -7,10 +7,10 @@ import { SHOP_PHONE, SHOP_PHONE_DISPLAY } from '../lib/config';
 import { formatBr, productPath } from '../lib/format';
 import type { HomeData, Product } from '../types';
 import { Icon, type IconName } from '../components/ui/Icon';
-import { ErrorState, SlowHint, useSlowHint } from '../components/ui/States';
+import { ErrorState, PageLoader } from '../components/ui/States';
 import { Seo } from '../components/ui/Seo';
 import { ProductImage } from '../components/product/ProductImage';
-import { ProductCard, ProductCardSkeleton } from '../components/product/ProductCard';
+import { ProductCard } from '../components/product/ProductCard';
 import { ProductExplorer } from '../components/product/ProductExplorer';
 import { Rail } from '../components/product/Rail';
 
@@ -167,30 +167,15 @@ function RepairBand() {
   );
 }
 
-function HomeSkeleton() {
-  return (
-    <div aria-hidden="true">
-      <div className={wrap}><div className="skeleton h-[170px] rounded-2xl sm:h-[440px] sm:rounded-3xl" /></div>
-      <div className={`mt-8 flex gap-2.5 overflow-hidden ${pad}`}>
-        {Array.from({ length: 4 }, (_, i) => <ProductCardSkeleton key={i} rail />)}
-      </div>
-    </div>
-  );
-}
-
 export default function Home() {
   const t = useT();
   const { data, isPending, isError, error, refetch } = useQuery({ queryKey: ['home'], queryFn: getHome, staleTime: 60_000 });
-  const slow = useSlowHint(isPending);
 
   return (
     <div className="pb-4">
       <Seo description={t('seo.home')} />
       {isPending ? (
-        <>
-          <HomeSkeleton />
-          <SlowHint show={slow} />
-        </>
+        <PageLoader />
       ) : isError ? (
         <ErrorState message={errorMessage(error)} onRetry={() => refetch()} />
       ) : (

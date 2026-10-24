@@ -1,9 +1,7 @@
-import { lazy, Suspense } from 'react';
+import { lazy } from 'react';
 import { Route, Routes } from 'react-router-dom';
-import { useT } from './i18n';
 import { Layout } from './components/layout/Layout';
 import { RequireAuth } from './components/layout/RequireAuth';
-import { Skeleton } from './components/ui/States';
 import Home from './pages/Home';
 
 // The home page loads first; the rest are fetched when someone opens them.
@@ -18,18 +16,20 @@ const Notifications = lazy(() => import('./pages/Notifications'));
 const Contact = lazy(() => import('./pages/Contact'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
-const Loading = () => {
-  const t = useT();
-  return (
-    <div className="mx-auto max-w-5xl space-y-4 px-4 py-8" aria-busy="true" aria-label={t('common.loading')}>
-      <Skeleton className="h-8 w-48" /><Skeleton className="h-64" />
-    </div>
-  );
+// After the first screen has appeared, fetch the other pages quietly, so moving to them is instant.
+const preload = () => {
+  void Promise.all([
+    import('./pages/Shop'), import('./pages/ProductPage'), import('./pages/Cart'), import('./pages/Checkout'),
+    import('./pages/AuthPage'), import('./pages/Orders'), import('./pages/OrderDetail'), import('./pages/Notifications'), import('./pages/Contact'),
+  ]);
 };
+if (typeof window !== 'undefined') {
+  if ('requestIdleCallback' in window) window.requestIdleCallback(preload, { timeout: 4000 });
+  else setTimeout(preload, 2000);
+}
 
 export default function App() {
   return (
-    <Suspense fallback={<Loading />}>
       <Routes>
         <Route element={<Layout />}>
           <Route index element={<Home />} />
@@ -48,6 +48,5 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
-    </Suspense>
   );
 }

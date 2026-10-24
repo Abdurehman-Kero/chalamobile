@@ -1,5 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { Link, type LinkProps } from 'react-router-dom';
+import { Spinner } from './Spinner';
 
 type Variant = 'primary' | 'secondary' | 'ghost';
 type Size = 'md' | 'lg' | 'sm';
@@ -20,8 +21,19 @@ export const buttonClass = (variant: Variant = 'primary', size: Size = 'md', ext
 
 interface BaseProps { variant?: Variant; size?: Size; className?: string; children: ReactNode }
 
-export function Button({ variant, size, className, children, ...rest }: BaseProps & ButtonHTMLAttributes<HTMLButtonElement>) {
-  return <button type="button" className={buttonClass(variant, size, className)} {...rest}>{children}</button>;
+/** `loading` shows the spinner in front of the label and blocks a second tap. */
+export function Button({
+  variant, size, className, children, loading = false, disabled, ...rest
+}: BaseProps & ButtonHTMLAttributes<HTMLButtonElement> & { loading?: boolean }) {
+  return (
+    <button
+      type="button" className={buttonClass(variant, size, className)}
+      disabled={disabled || loading} aria-busy={loading || undefined} {...rest}
+    >
+      {loading && <Spinner size={18} className="text-current" label="" />}
+      {children}
+    </button>
+  );
 }
 
 export function LinkButton({ variant, size, className, children, ...rest }: BaseProps & LinkProps) {

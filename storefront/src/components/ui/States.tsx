@@ -2,25 +2,35 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { useT } from '../../i18n';
 import { Button } from './Button';
 import { Icon, type IconName } from './Icon';
+import { Spinner } from './Spinner';
 
-/** After a few seconds of loading, explains that the shop's server may be waking up. */
+/** True once something has been loading for a few seconds, so a gentle note can be shown. */
 export function useSlowHint(loading: boolean, afterMs = 4000): boolean {
   const [slow, setSlow] = useState(false);
   useEffect(() => {
     if (!loading) return;
-    const t = setTimeout(() => setSlow(true), afterMs);
-    return () => { clearTimeout(t); setSlow(false); };
+    const timer = setTimeout(() => setSlow(true), afterMs);
+    return () => { clearTimeout(timer); setSlow(false); };
   }, [loading, afterMs]);
   return slow;
 }
 
-export function SlowHint({ show }: { show: boolean }) {
+/**
+ * A page or a section that is loading: the spinner, and after a few seconds a calm note that
+ * it is taking a little longer than usual. `compact` is for a section inside a page.
+ */
+export function PageLoader({ compact = false }: { compact?: boolean }) {
   const t = useT();
-  if (!show) return null;
+  const slow = useSlowHint(true);
   return (
-    <p role="status" className="mx-auto mt-4 max-w-md rounded-xl bg-sunken px-4 py-3 text-center text-sm text-muted">
-      {t('slow.hint')}
-    </p>
+    <div className={`grid place-items-center px-4 ${compact ? 'min-h-[220px] py-10' : 'min-h-[55vh] py-16'}`}>
+      <div className="flex flex-col items-center text-center">
+        <Spinner size={compact ? 34 : 42} className="text-ink" />
+        <p role="status" className={`mt-4 max-w-xs text-sm text-muted transition-opacity duration-500 ${slow ? 'opacity-100' : 'opacity-0'}`} aria-hidden={!slow}>
+          {t('slow.hint')}
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -45,8 +55,4 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
       {onRetry && <Button className="mt-5" onClick={onRetry}>{t('common.tryAgain')}</Button>}
     </div>
   );
-}
-
-export function Skeleton({ className = '' }: { className?: string }) {
-  return <div className={`skeleton ${className}`} aria-hidden="true" />;
 }

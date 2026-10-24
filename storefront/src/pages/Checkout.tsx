@@ -179,7 +179,7 @@ export default function Checkout() {
             {...register('note', { maxLength: { value: 500, message: t('co.noteMax') } })} error={errors.note?.message} />
 
           <FormAlert message={formError} />
-          <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+          <Button type="submit" size="lg" className="w-full" loading={isSubmitting}>
             {isSubmitting ? t('co.placing') : t('co.place', { total: formatBr(total) })}
           </Button>
           <p className="text-center text-xs text-muted">{t('co.noPayment')}</p>

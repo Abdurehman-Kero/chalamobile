@@ -73,7 +73,7 @@ export default function AuthPage({ mode }: { mode: 'login' | 'register' }) {
             {...register('password', isRegister ? passwordRule(t) : { required: t('auth.enterPassword') })} error={errors.password?.message}
           />
           <FormAlert message={formError} />
-          <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+          <Button type="submit" size="lg" className="w-full" loading={isSubmitting}>
             {isSubmitting ? t('auth.wait') : isRegister ? t('auth.create') : t('auth.signIn')}
           </Button>
         </form>

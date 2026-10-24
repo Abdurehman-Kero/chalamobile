@@ -14,7 +14,7 @@ import { Button, buttonClass } from '../components/ui/Button';
 import { Icon } from '../components/ui/Icon';
 import { PageHeader } from '../components/ui/PageHeader';
 import { QtyStepper } from '../components/ui/QtyStepper';
-import { EmptyState, ErrorState, Skeleton } from '../components/ui/States';
+import { EmptyState, ErrorState, PageLoader } from '../components/ui/States';
 import { Seo } from '../components/ui/Seo';
 import { ProductImage } from '../components/product/ProductImage';
 import { ProductCard } from '../components/product/ProductCard';
@@ -113,14 +113,7 @@ export default function ProductPage() {
     view(card);
   }, [loaded, view]);
 
-  if (isPending) {
-    return (
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-6 sm:px-6 lg:grid-cols-[1fr_380px] lg:px-8">
-        <Skeleton className="aspect-square rounded-3xl" />
-        <div className="space-y-4"><Skeleton className="h-4 w-24" /><Skeleton className="h-9 w-4/5" /><Skeleton className="h-40" /></div>
-      </div>
-    );
-  }
+  if (isPending) return <PageLoader />;
   if (isError) {
     const notFound = (error as { response?: { status?: number } }).response?.status === 404;
     return notFound

@@ -98,16 +98,3 @@ export function ProductCard({ product, showSold = false, rail = false, row = fal
     </article>
   );
 }
-
-export function ProductCardSkeleton({ rail = false }: { rail?: boolean }) {
-  return (
-    <div className={`overflow-hidden rounded-2xl border border-line bg-surface ${rail ? RAIL : ''}`} aria-hidden="true">
-      <div className="skeleton aspect-square rounded-none" />
-      <div className="space-y-2 p-3">
-        <div className="skeleton h-3 w-1/3" />
-        <div className="skeleton h-4 w-5/6" />
-        <div className="skeleton h-5 w-1/2" />
-      </div>
-    </div>
-  );
-}

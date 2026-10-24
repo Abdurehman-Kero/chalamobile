@@ -9,7 +9,7 @@ import type { Order } from '../types';
 import { buttonClass } from '../components/ui/Button';
 import { Icon } from '../components/ui/Icon';
 import { PageHeader } from '../components/ui/PageHeader';
-import { EmptyState, ErrorState, Skeleton } from '../components/ui/States';
+import { EmptyState, ErrorState, PageLoader } from '../components/ui/States';
 import { Seo } from '../components/ui/Seo';
 import { StatusBadge } from '../components/ui/StatusBadge';
 
@@ -61,7 +61,7 @@ export default function OrderDetail() {
     refetchInterval: (q) => (q.state.data && ['pending', 'confirmed', 'ready'].includes(q.state.data.status) ? 30_000 : false),
   });
 
-  if (isPending) return <div className="mx-auto max-w-3xl space-y-3 px-4 py-6"><Skeleton className="h-24" /><Skeleton className="h-64" /></div>;
+  if (isPending) return <PageLoader />;
   if (isError) {
     const notFound = (error as { response?: { status?: number } }).response?.status === 404;
     return notFound
