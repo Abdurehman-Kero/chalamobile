@@ -42,7 +42,7 @@ exports.create = async (req, res) => {
   }
 };
 
-// Change name, role, active state, or reset the password.
+// Change name, email, role, active state, or reset the password.
 exports.update = async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -54,6 +54,15 @@ exports.update = async (req, res) => {
       const name = String(req.body.name).trim();
       if (!name) return res.status(400).json({ error: 'Enter the person’s name', code: 'VALIDATION_ERROR' });
       patch.name = name;
+    }
+    if (req.body.email !== undefined) {
+      const email = String(req.body.email).trim().toLowerCase();
+      if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'Enter a valid email address', code: 'VALIDATION_ERROR' });
+      if (email !== target.email.toLowerCase()) {
+        const taken = await db('users').whereRaw('LOWER(email) = ?', [email]).whereNot({ id }).first();
+        if (taken) return res.status(409).json({ error: 'Someone already uses this email', code: 'DUPLICATE_EMAIL' });
+        patch.email = email;
+      }
     }
     if (req.body.role !== undefined) {
       if (!ROLES.includes(req.body.role)) return res.status(400).json({ error: 'Choose a role', code: 'VALIDATION_ERROR' });

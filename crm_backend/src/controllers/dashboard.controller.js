@@ -31,8 +31,10 @@ exports.getMetrics = async (req, res) => {
       });
     }
 
-    const s = await summarize(today, tomorrow, { salesBy: role === 'sales' ? id : undefined });
-    const lowStockCount = await count(db('products').where('is_active', true).where('stock', '<=', LOW_STOCK_AT));
+    const [s, lowStockCount] = await Promise.all([
+      summarize(today, tomorrow, { salesBy: role === 'sales' ? id : undefined }),
+      count(db('products').where('is_active', true).where('stock', '<=', LOW_STOCK_AT)),
+    ]);
 
     if (role === 'sales') {
       return res.json({
@@ -45,7 +47,12 @@ exports.getMetrics = async (req, res) => {
       });
     }
 
-    const week = await summarize(addDays(today, -6), tomorrow);
+    const [week, activeRepairs, readyRepairs, totalCustomers] = await Promise.all([
+      summarize(addDays(today, -6), tomorrow),
+      count(db('repairs').whereIn('status', ['received', 'diagnosing', 'fixing'])),
+      count(db('repairs').where('status', 'completed')),
+      count(db('customers')),
+    ]);
     res.json({
       role,
       todayRevenue: s.total_revenue,
@@ -56,9 +63,9 @@ exports.getMetrics = async (req, res) => {
       unitsSold: s.units_sold,
       salesCount: s.sales_count,
       purchasesToday: s.purchases_total,
-      activeRepairs: await count(db('repairs').whereIn('status', ['received', 'diagnosing', 'fixing'])),
-      readyRepairs: await count(db('repairs').where('status', 'completed')),
-      totalCustomers: await count(db('customers')),
+      activeRepairs,
+      readyRepairs,
+      totalCustomers,
       lowStockCount,
     });
   } catch (err) {

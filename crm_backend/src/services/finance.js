@@ -17,20 +17,23 @@ async function summarize(from, to, { salesBy } = {}) {
     .where('s.created_at', '>=', from).where('s.created_at', '<', to);
   if (salesBy) { salesQ.where('s.created_by', salesBy); itemsQ.where('s.created_by', salesBy); }
 
-  const [sales] = await salesQ.select(db.raw('COALESCE(SUM(s.total), 0) AS revenue'), db.raw('COUNT(*) AS n'));
-  const [items] = await itemsQ.select(
-    db.raw('COALESCE(SUM(si.qty), 0) AS units'),
-    db.raw('COALESCE(SUM((si.unit_price - COALESCE(si.cost_price, si.unit_price)) * si.qty), 0) AS profit'),
-  );
-  const [repairs] = await db('repairs')
-    .where('delivered_at', '>=', from).where('delivered_at', '<', to)
-    .select(
-      db.raw('COALESCE(SUM(actual_cost), 0) AS revenue'),
-      db.raw('COALESCE(SUM(actual_cost - COALESCE(parts_cost, 0)), 0) AS profit'),
-      db.raw('COUNT(*) AS n'),
-    );
-  const [bought] = await db('purchases').where('created_at', '>=', from).where('created_at', '<', to)
-    .select(db.raw('COALESCE(SUM(total), 0) AS total'), db.raw('COUNT(*) AS n'));
+  // The four questions do not depend on each other, so they are asked together.
+  const [[sales], [items], [repairs], [bought]] = await Promise.all([
+    salesQ.select(db.raw('COALESCE(SUM(s.total), 0) AS revenue'), db.raw('COUNT(*) AS n')),
+    itemsQ.select(
+      db.raw('COALESCE(SUM(si.qty), 0) AS units'),
+      db.raw('COALESCE(SUM((si.unit_price - COALESCE(si.cost_price, si.unit_price)) * si.qty), 0) AS profit'),
+    ),
+    db('repairs')
+      .where('delivered_at', '>=', from).where('delivered_at', '<', to)
+      .select(
+        db.raw('COALESCE(SUM(actual_cost), 0) AS revenue'),
+        db.raw('COALESCE(SUM(actual_cost - COALESCE(parts_cost, 0)), 0) AS profit'),
+        db.raw('COUNT(*) AS n'),
+      ),
+    db('purchases').where('created_at', '>=', from).where('created_at', '<', to)
+      .select(db.raw('COALESCE(SUM(total), 0) AS total'), db.raw('COUNT(*) AS n')),
+  ]);
 
   const salesRevenue = num(sales.revenue);
   const repairRevenue = num(repairs.revenue);
