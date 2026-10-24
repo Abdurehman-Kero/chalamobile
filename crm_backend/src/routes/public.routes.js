@@ -22,6 +22,7 @@ const orderLimit = limiter(15, 60, 'Too many orders from this connection. Please
 // Browsing: no account needed.
 router.get('/home',          ctrl.home);
 router.get('/categories',    ctrl.categories);
+router.get('/filters',       ctrl.filters);
 router.get('/products',      ctrl.listProducts);
 router.get('/products/:id',  ctrl.getProduct);
 

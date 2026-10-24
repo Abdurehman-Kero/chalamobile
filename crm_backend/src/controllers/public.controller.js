@@ -80,6 +80,10 @@ exports.listProducts = async (req, res) => {
     }
     if (category) query.where('products.category', String(category));
     if (brand) query.where('products.brand', String(brand));
+    const min = Number(req.query.min_price), max = Number(req.query.max_price);
+    if (req.query.min_price !== undefined && req.query.min_price !== '' && Number.isFinite(min)) query.where('products.selling_price', '>=', min);
+    if (req.query.max_price !== undefined && req.query.max_price !== '' && Number.isFinite(max)) query.where('products.selling_price', '<=', max);
+    if (req.query.in_stock === '1' || req.query.in_stock === 'true') query.where('products.stock', '>', 0);
 
     const [{ count }] = await query.clone().clearSelect().clearOrder().count({ count: '*' });
     // Things that are sold out go to the end, whatever the sort.
@@ -91,6 +95,22 @@ exports.listProducts = async (req, res) => {
     res.json({ products: rows.map(toCard), total, page, has_more: page * limit < total });
   } catch (err) {
     console.error('[public.listProducts]', err);
+    res.status(500).json({ error: 'Server error', code: 'SERVER_ERROR' });
+  }
+};
+
+// What the shop page can filter by: categories, brands and the price range of what is for sale.
+exports.filters = async (req, res) => {
+  try {
+    const base = () => db('products').where({ is_active: true, is_published: true });
+    const categories = await base().whereNotNull('category').groupBy('category')
+      .select('category AS name', db.raw('COUNT(*)::int AS count')).orderBy('count', 'desc');
+    const brands = await base().whereNotNull('brand').groupBy('brand')
+      .select('brand AS name', db.raw('COUNT(*)::int AS count')).orderBy('count', 'desc');
+    const [range] = await base().min({ min: 'selling_price' }).max({ max: 'selling_price' });
+    res.json({ categories, brands, price: { min: Math.floor(Number(range.min) || 0), max: Math.ceil(Number(range.max) || 0) } });
+  } catch (err) {
+    console.error('[public.filters]', err);
     res.status(500).json({ error: 'Server error', code: 'SERVER_ERROR' });
   }
 };
