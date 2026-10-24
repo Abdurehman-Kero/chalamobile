@@ -18,28 +18,30 @@ import { TopLoader } from '../components/TopLoader';
 import { PAYMENT_LABELS } from '../components/SalesHistorySheet';
 import { formatBr } from '../utils/formatCurrency';
 import { timeAgo } from '../utils/formatDate';
+import { tx, useT } from '../i18n';
 import { Tone, colors, radius, shadow, spacing, layout } from '../theme';
 
 const ALL = 'all';
 
 const STATUS: Record<OrderStatus, { label: string; tone: Tone }> = {
-  pending:   { label: 'New',       tone: 'amber' },
-  confirmed: { label: 'Confirmed', tone: 'blue' },
-  ready:     { label: 'Ready',     tone: 'purple' },
-  delivered: { label: 'Delivered', tone: 'green' },
-  cancelled: { label: 'Cancelled', tone: 'neutral' },
+  pending:   { label: tx('New'),       tone: 'amber' },
+  confirmed: { label: tx('Confirmed'), tone: 'blue' },
+  ready:     { label: tx('Ready'),     tone: 'purple' },
+  delivered: { label: tx('Delivered'), tone: 'green' },
+  cancelled: { label: tx('Cancelled'), tone: 'neutral' },
 };
 
 // What the shop can do next with an order in each state.
 const ACTIONS: Record<OrderStatus, { status: OrderStatus; title: string; variant: 'primary' | 'secondary' | 'dark' }[]> = {
-  pending:   [{ status: 'confirmed', title: 'Confirm order', variant: 'dark' }, { status: 'cancelled', title: 'Cancel', variant: 'secondary' }],
-  confirmed: [{ status: 'ready', title: 'Mark ready', variant: 'dark' }, { status: 'delivered', title: 'Delivered', variant: 'secondary' }],
-  ready:     [{ status: 'delivered', title: 'Mark delivered', variant: 'dark' }],
+  pending:   [{ status: 'confirmed', title: tx('Confirm order'), variant: 'dark' }, { status: 'cancelled', title: tx('Cancel'), variant: 'secondary' }],
+  confirmed: [{ status: 'ready', title: tx('Mark ready'), variant: 'dark' }, { status: 'delivered', title: tx('Delivered'), variant: 'secondary' }],
+  ready:     [{ status: 'delivered', title: tx('Mark delivered'), variant: 'dark' }],
   delivered: [],
   cancelled: [],
 };
 
 export default function OrdersScreen() {
+  const t = useT();
   const navigation: any = useNavigation();
   const { data, error, loading, refreshing, fetching, refresh, reload } = useResource('orders', ordersApi.getOrders);
   const [filter, setFilter] = useState(ALL);
@@ -54,20 +56,20 @@ export default function OrdersScreen() {
   const visible = useMemo(() => (filter === ALL ? orders : orders.filter(o => o.status === filter)), [orders, filter]);
 
   const chips: ChipItem[] = [
-    { key: ALL, label: 'All', count: orders.length },
+    { key: ALL, label: t('All'), count: orders.length },
     ...(['pending', 'confirmed', 'ready', 'delivered', 'cancelled'] as OrderStatus[])
       .filter(s => counts[s])
-      .map(s => ({ key: s, label: STATUS[s].label, count: counts[s] })),
+      .map(s => ({ key: s, label: t(STATUS[s].label), count: counts[s] })),
   ];
 
   const change = async (order: Order, status: OrderStatus) => {
     setBusyId(order.id);
     try {
       await ordersApi.setOrderStatus(order.id, status);
-      toast.success(status === 'confirmed' ? 'Order confirmed and recorded as a sale' : 'Order updated');
+      toast.success(status === 'confirmed' ? t('Order confirmed and recorded as a sale') : t('Order updated'));
       reload();
     } catch (err) {
-      toast.error(getErrorMessage(err, 'Could not update the order'));
+      toast.error(getErrorMessage(err, t('Could not update the order')));
     } finally {
       setBusyId(null);
     }
@@ -82,15 +84,15 @@ export default function OrdersScreen() {
             <Text style={styles.number}>{item.order_number}</Text>
             <Text style={styles.meta}>{timeAgo(item.created_at)}</Text>
           </View>
-          <Badge label={s.label} variant={s.tone} />
+          <Badge label={t(s.label)} variant={s.tone} />
         </View>
 
         <Text style={styles.customer}>{item.customer_name}</Text>
-        <TouchableOpacity onPress={() => Linking.openURL(`tel:${item.phone}`)} accessibilityRole="link" accessibilityLabel={`Call ${item.customer_name}`}>
+        <TouchableOpacity onPress={() => Linking.openURL(`tel:${item.phone}`)} accessibilityRole="link" accessibilityLabel={t('Call {name}', { name: item.customer_name })}>
           <Text style={styles.phone}>📞 {item.phone}</Text>
         </TouchableOpacity>
         <Text style={styles.meta}>
-          {item.delivery_method === 'delivery' ? `🚚 Deliver to ${item.address}` : '🏬 Pick up in shop'}
+          {item.delivery_method === 'delivery' ? `🚚 ${t('Deliver to {address}', { address: item.address ?? '' })}` : `🏬 ${t('Pick up in shop')}`}
         </Text>
 
         <View style={styles.items}>
@@ -104,7 +106,7 @@ export default function OrdersScreen() {
         {item.note ? <Text style={styles.note}>“{item.note}”</Text> : null}
 
         <View style={styles.totalRow}>
-          <Text style={styles.payment}>{PAYMENT_LABELS[item.payment_method] || item.payment_method}</Text>
+          <Text style={styles.payment}>{t(PAYMENT_LABELS[item.payment_method] || item.payment_method)}</Text>
           <Text style={styles.total}>{formatBr(item.total)}</Text>
         </View>
 
@@ -112,7 +114,7 @@ export default function OrdersScreen() {
           <View style={styles.actions}>
             {ACTIONS[item.status].map(a => (
               <Button
-                key={a.status} title={a.title} variant={a.variant} size="sm"
+                key={a.status} title={t(a.title)} variant={a.variant} size="sm"
                 loading={busyId === item.id} disabled={busyId !== null}
                 onPress={() => change(item, a.status)} style={styles.actionBtn}
               />
@@ -124,20 +126,20 @@ export default function OrdersScreen() {
   };
 
   const empty = loading && !data ? (
-    <LoadingState label="Loading orders…" />
+    <LoadingState label={t('Loading orders…')} />
   ) : error && !data ? (
-    <EmptyState emoji="📡" title="Can't load orders" message={error} actionLabel="Try again" onAction={reload} />
+    <EmptyState emoji="📡" title={t("Can't load orders")} message={error} actionLabel={t('Try again')} onAction={reload} />
   ) : (
-    <EmptyState emoji="🛍️" title="No orders here" message="Orders placed on the web store show up here." />
+    <EmptyState emoji="🛍️" title={t('No orders here')} message={t('Orders placed on the web store show up here.')} />
   );
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <OfflineBanner />
       <ScreenHeader
-        title="Online orders"
-        subtitle={data ? `${data.pending} waiting for you` : undefined}
-        right={<Button title="Back" size="sm" variant="secondary" onPress={() => navigation.goBack()} />}
+        title={t('Online orders')}
+        subtitle={data ? t('{n} waiting for you', { n: data.pending }) : undefined}
+        right={<Button title={t('Back')} size="sm" variant="secondary" onPress={() => navigation.goBack()} />}
       />
       <ChipRow items={chips} selected={filter} onSelect={setFilter} />
       <TopLoader active={fetching && !!data} />
@@ -148,7 +150,7 @@ export default function OrdersScreen() {
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[colors.red]} />}
-        ListHeaderComponent={error && data ? <InlineNotice message="Couldn't refresh. Showing saved orders." onRetry={reload} /> : undefined}
+        ListHeaderComponent={error && data ? <InlineNotice message={t("Couldn't refresh. Showing saved orders.")} onRetry={reload} /> : undefined}
         ListEmptyComponent={empty}
       />
     </SafeAreaView>

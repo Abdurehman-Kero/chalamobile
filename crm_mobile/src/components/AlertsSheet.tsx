@@ -16,57 +16,68 @@ interface Props {
   canRestock: boolean;         // owner: restock; sales: only look at stock
 }
 
+import { useT, tx } from '../i18n';
+
 const SHOWN = 4;
 
 // What needs attention right now. Each group can be acted on or ignored for today.
 export const AlertsSheet: React.FC<Props> = ({ visible, onClose, alerts, onIgnore, onRestock, onOpenRepairs, canRestock }) => {
+  const t = useT();
+  // The server words these in English, so they are matched here and written in the chosen language.
+  const detail = (text: string) => {
+    const left = /^Only (\d+) left$/.exec(text);
+    if (left) return t('Only {n} left', { n: left[1] });
+    const late = /^Overdue by (\d+) days?$/.exec(text);
+    if (late) return t(late[1] === '1' ? tx('Overdue by {n} day') : tx('Overdue by {n} days'), { n: late[1] });
+    return t(text);
+  };
   const stock = alerts.filter(a => a.type === 'low_stock');
   const repairs = alerts.filter(a => a.type === 'repair_due');
 
   return (
-    <CenterModal visible={visible} onClose={onClose} title={alerts.length ? 'Needs your attention' : 'All clear'}>
+    <CenterModal visible={visible} onClose={onClose} title={alerts.length ? t('Needs your attention') : t('All clear')}>
       {alerts.length === 0 && (
         <View style={styles.clear}>
           <Text style={styles.clearEmoji}>✅</Text>
-          <Text style={styles.clearText}>Nothing needs attention right now.</Text>
+          <Text style={styles.clearText}>{t('Nothing needs attention right now.')}</Text>
         </View>
       )}
 
       {repairs.length > 0 && (
         <View style={styles.group}>
-          <Text style={styles.groupTitle}>⏰ Repairs due ({repairs.length})</Text>
+          <Text style={styles.groupTitle}>⏰ {t('Repairs due')} ({repairs.length})</Text>
           {repairs.slice(0, SHOWN).map(a => (
             <View key={a.key} style={styles.item}>
               <View style={styles.itemBody}>
                 <Text style={styles.itemTitle} numberOfLines={1}>{a.title}</Text>
-                <Text style={styles.itemMeta} numberOfLines={1}>{a.ticket_number} · {a.customer_name || 'No name'}</Text>
+                <Text style={styles.itemMeta} numberOfLines={1}>{a.ticket_number} · {a.customer_name || t('No name')}</Text>
               </View>
-              <Text style={[styles.when, a.severity === 'danger' && styles.whenDanger]}>{a.detail}</Text>
+              <Text style={[styles.when, a.severity === 'danger' && styles.whenDanger]}>{detail(a.detail)}</Text>
             </View>
           ))}
-          {repairs.length > SHOWN && <Text style={styles.more}>+ {repairs.length - SHOWN} more</Text>}
+          {repairs.length > SHOWN && <Text style={styles.more}>{t('+{n} more', { n: repairs.length - SHOWN })}</Text>}
           <View style={styles.actions}>
-            <Button title="Ignore today" variant="secondary" size="sm" onPress={() => onIgnore(repairs.map(r => r.key))} style={styles.action} />
-            <Button title="Open repairs" size="sm" onPress={() => { onClose(); onOpenRepairs(); }} style={styles.action} />
+            <Button title={t('Ignore today')} variant="secondary" size="sm" onPress={() => onIgnore(repairs.map(r => r.key))} style={styles.action} />
+            <Button title={t('Open repairs')} size="sm" onPress={() => { onClose(); onOpenRepairs(); }} style={styles.action} />
           </View>
         </View>
       )}
 
       {stock.length > 0 && (
         <View style={styles.group}>
-          <Text style={styles.groupTitle}>📦 Running low ({stock.length})</Text>
+          <Text style={styles.groupTitle}>📦 {t('Running low')} ({stock.length})</Text>
           {stock.slice(0, SHOWN).map(a => (
             <View key={a.key} style={styles.item}>
               <View style={styles.itemBody}>
                 <Text style={styles.itemTitle} numberOfLines={1}>{a.emoji} {a.title}</Text>
               </View>
-              <Text style={[styles.when, a.severity === 'danger' && styles.whenDanger]}>{a.detail}</Text>
+              <Text style={[styles.when, a.severity === 'danger' && styles.whenDanger]}>{detail(a.detail)}</Text>
             </View>
           ))}
-          {stock.length > SHOWN && <Text style={styles.more}>+ {stock.length - SHOWN} more</Text>}
+          {stock.length > SHOWN && <Text style={styles.more}>{t('+{n} more', { n: stock.length - SHOWN })}</Text>}
           <View style={styles.actions}>
-            <Button title="Ignore today" variant="secondary" size="sm" onPress={() => onIgnore(stock.map(s => s.key))} style={styles.action} />
-            <Button title={canRestock ? 'Restock' : 'View stock'} size="sm" onPress={() => { onClose(); onRestock(); }} style={styles.action} />
+            <Button title={t('Ignore today')} variant="secondary" size="sm" onPress={() => onIgnore(stock.map(s => s.key))} style={styles.action} />
+            <Button title={canRestock ? t('Restock') : t('View stock')} size="sm" onPress={() => { onClose(); onRestock(); }} style={styles.action} />
           </View>
         </View>
       )}

@@ -3,6 +3,7 @@ import { Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-nat
 import { SyncSheet } from './SyncSheet';
 import { useOutboxCounts } from '../offline/engine';
 import { useConnectivityStore } from '../store/connectivityStore';
+import { useT, tx } from '../i18n';
 import { colors } from '../theme';
 
 // One strip at the top of every screen that tells the truth about connection and
@@ -10,12 +11,13 @@ import { colors } from '../theme';
 // at most you see "Syncing…" for a moment. It opens the list of waiting changes
 // when there is something to see.
 export const OfflineBanner: React.FC = () => {
+  const t = useT();
   const isOnline = useConnectivityStore(s => s.isOnline);
   const deviceConnected = useConnectivityStore(s => s.deviceConnected);
   const { pending, failed } = useOutboxCounts();
   const [open, setOpen] = useState(false);
 
-  const changes = (n: number) => `${n} ${n === 1 ? 'change' : 'changes'}`;
+  const changes = (n: number) => t(n === 1 ? tx('{n} change') : tx('{n} changes'), { n });
   let tone: 'amber' | 'red' | null = null;
   let message = '';
   let busy = false;
@@ -23,20 +25,20 @@ export const OfflineBanner: React.FC = () => {
 
   if (failed > 0) {
     tone = 'red';
-    message = `${changes(failed)} couldn’t be saved`;
-    action = 'Review';
+    message = t('{changes} couldn’t be saved', { changes: changes(failed) });
+    action = t('Review');
   } else if (isOnline && pending > 0) {
     // Online: they are being sent right now.
     tone = 'amber';
-    message = `Syncing ${changes(pending)}…`;
+    message = t('Syncing {changes}…', { changes: changes(pending) });
     busy = true;
   } else if (!isOnline) {
     tone = 'amber';
-    const where = deviceConnected ? 'Can’t connect right now' : 'You’re offline';
+    const where = deviceConnected ? t('Can’t connect right now') : t('You’re offline');
     message = pending > 0
-      ? `${where} · ${changes(pending)} saved on this phone, will sync automatically`
-      : `${where}. You can keep working; changes sync automatically later.`;
-    action = pending > 0 ? 'View' : '';
+      ? t('{where} · {changes} saved on this phone, will sync automatically', { where, changes: changes(pending) })
+      : t('{where}. You can keep working; changes sync automatically later.', { where });
+    action = pending > 0 ? t('View') : '';
   }
 
   if (!tone) return <SyncSheet visible={open} onClose={() => setOpen(false)} />;

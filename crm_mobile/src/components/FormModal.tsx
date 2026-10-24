@@ -3,6 +3,7 @@ import {
   Keyboard, KeyboardAvoidingView, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View,
 } from 'react-native';
 import { SafeAreaProvider, initialWindowMetrics, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useT } from '../i18n';
 import { colors, layout, spacing } from '../theme';
 
 // Inputs call reveal() when focused so the form scrolls them to the top of the
@@ -22,6 +23,7 @@ interface Props {
 }
 
 function FormPage({ onClose, title, subtitle, children, footer }: Omit<Props, 'visible'>) {
+  const t = useT();
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<any>(null);
   const contentRef = useRef<any>(null);
@@ -55,7 +57,7 @@ function FormPage({ onClose, title, subtitle, children, footer }: Omit<Props, 'v
           style={styles.close}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           accessibilityRole="button"
-          accessibilityLabel="Close form"
+          accessibilityLabel={t('Close')}
         >
           <Text style={styles.closeIcon}>✕</Text>
         </TouchableOpacity>

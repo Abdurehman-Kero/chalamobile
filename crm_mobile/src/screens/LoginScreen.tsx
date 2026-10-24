@@ -11,6 +11,9 @@ import { Icon } from '../components/Icon';
 import { ServerSettingsSheet } from '../components/ServerSettingsSheet';
 import { getApiBaseUrl, testConnection } from '../api/axios';
 import { getErrorMessage } from '../api/errors';
+import { useT } from '../i18n';
+import { LanguagePicker } from '../components/LanguagePicker';
+import { ForgotPasswordSheet } from '../components/ForgotPasswordSheet';
 import { colors, radius, spacing, layout } from '../theme';
 
 type ServerState = 'checking' | 'online' | 'offline';
@@ -24,11 +27,13 @@ const DEMO_ACCOUNTS = __DEV__ ? [
 ] : [];
 
 export default function LoginScreen() {
+  const t = useT();
   const [email, setEmail] = useState(__DEV__ ? DEMO_ACCOUNTS[0].email : '');
   const [password, setPassword] = useState(__DEV__ ? DEMO_ACCOUNTS[0].password : '');
   const [loading, setLoading] = useState(false);
   const [slow, setSlow] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [forgotOpen, setForgotOpen] = useState(false);
 
   const scrollRef = useRef<any>(null);
   const passwordRef = useRef<any>(null);
@@ -37,8 +42,8 @@ export default function LoginScreen() {
   // Some first sign-ins take a while. After a few seconds, say so calmly, so it never looks frozen.
   useEffect(() => {
     if (!loading) { setSlow(false); return; }
-    const t = setTimeout(() => setSlow(true), 5000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setSlow(true), 5000);
+    return () => clearTimeout(timer);
   }, [loading]);
 
   // With the keyboard open there is less room, so bring the form back into view.
@@ -46,7 +51,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email.trim() || !password) {
-      setError('Enter your email and password.');
+      setError(t('Enter your email and password.'));
       return;
     }
     Keyboard.dismiss();
@@ -55,8 +60,8 @@ export default function LoginScreen() {
     try {
       await login(email.trim(), password);
     } catch (err: any) {
-      if (err?.response?.status === 401) setError('Wrong email or password. Please try again.');
-      else setError(getErrorMessage(err, 'Could not sign in. Please try again.'));
+      if (err?.response?.status === 401) setError(t('Wrong email or password. Please try again.'));
+      else setError(getErrorMessage(err, t('Could not sign in. Please try again.')));
     } finally {
       setLoading(false);
     }
@@ -86,6 +91,8 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
+          <View style={styles.lang}><LanguagePicker variant="pill" /></View>
+
           <View style={styles.brand}>
             <Image
               source={require('../assets/logo.png')}
@@ -98,15 +105,15 @@ export default function LoginScreen() {
               <Text style={styles.brandMain}>Chala </Text>
               <Text style={styles.brandAccent}>Mobile</Text>
             </View>
-            <Text style={styles.brandSub}>Business management</Text>
+            <Text style={styles.brandSub}>{t('Business management')}</Text>
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Sign in</Text>
-            <Text style={styles.cardSub}>Use the account your shop owner gave you.</Text>
+            <Text style={styles.cardTitle}>{t('Sign in')}</Text>
+            <Text style={styles.cardSub}>{t('Use the account your shop owner gave you.')}</Text>
 
             <FormInput
-              label="Email"
+              label={t('Email')}
               value={email}
               onChangeText={(v) => { setEmail(v); setError(null); }}
               placeholder="you@example.com"
@@ -123,10 +130,10 @@ export default function LoginScreen() {
             />
             <FormInput
               ref={passwordRef}
-              label="Password"
+              label={t('Password')}
               value={password}
               onChangeText={(v) => { setPassword(v); setError(null); }}
-              placeholder="Your password"
+              placeholder={t('Your password')}
               isPassword
               autoCapitalize="none"
               autoComplete="password"
@@ -144,12 +151,16 @@ export default function LoginScreen() {
               </View>
             ) : null}
 
-            <Button title="Sign in" onPress={handleLogin} loading={loading} style={styles.signIn} />
+            <Button title={t('Sign in')} onPress={handleLogin} loading={loading} style={styles.signIn} />
+
+            <TouchableOpacity onPress={() => setForgotOpen(true)} style={styles.forgot} accessibilityRole="button">
+              <Text style={styles.forgotText}>{t('Forgot your password?')}</Text>
+            </TouchableOpacity>
 
             {slow && (
               <View style={styles.wake} accessibilityLiveRegion="polite">
                 <ActivityIndicator size="small" color={colors.amberDark} />
-                <Text style={styles.wakeText}>This is taking a little longer than usual. Thanks for your patience.</Text>
+                <Text style={styles.wakeText}>{t('This is taking a little longer than usual. Thanks for your patience.')}</Text>
               </View>
             )}
 
@@ -194,6 +205,13 @@ export default function LoginScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
+      <ForgotPasswordSheet
+        visible={forgotOpen}
+        onClose={() => setForgotOpen(false)}
+        initialEmail={email}
+        onDone={(e) => { setEmail(e); setPassword(''); setError(null); }}
+      />
+
       {__DEV__ && (
         <ServerSettingsSheet
           visible={serverOpen}
@@ -210,6 +228,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bgDeep },
   scroll: { flexGrow: 1, justifyContent: 'center', padding: layout.screenX, paddingTop: spacing['3xl'], paddingBottom: spacing['3xl'] },
 
+  lang: { marginBottom: spacing.xl },
   brand: { alignItems: 'center', marginBottom: spacing['3xl'] },
   phone: { width: 76, height: 76, marginBottom: spacing.lg },
   brandRow: { flexDirection: 'row' },
@@ -231,6 +250,8 @@ const styles = StyleSheet.create({
   errorIcon: { marginRight: spacing.sm },
   errorText: { flex: 1, color: colors.redDark, fontSize: 14, fontWeight: '600' },
   signIn: { marginTop: spacing.xs },
+  forgot: { alignSelf: 'center', paddingVertical: spacing.md, marginTop: spacing.xs },
+  forgotText: { color: colors.red, fontSize: 14, fontWeight: '800' },
   wake: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: colors.amberSoft, borderWidth: 1, borderColor: colors.amberBorder,
     borderRadius: radius.sm, padding: spacing.md, marginTop: spacing.md,

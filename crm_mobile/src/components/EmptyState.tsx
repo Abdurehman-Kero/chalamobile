@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { Button } from './Button';
+import { useT } from '../i18n';
 import { colors, spacing } from '../theme';
 
 interface Props {
@@ -22,7 +23,9 @@ export const EmptyState: React.FC<Props> = ({ emoji, title, message, actionLabel
 
 // A spinner with a short label. After a few seconds a calm note says it is taking a little longer
 // than usual, so the screen never looks frozen. `variant` is kept so existing screens still compile.
-export const LoadingState: React.FC<{ label?: string; variant?: 'list' | 'home' }> = ({ label = 'Loading…' }) => {
+export const LoadingState: React.FC<{ label?: string; variant?: 'list' | 'home' }> = ({ label }) => {
+  const t = useT();
+  label = label ?? t('Loading…');
   const [slow, setSlow] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setSlow(true), 5000);
@@ -32,7 +35,7 @@ export const LoadingState: React.FC<{ label?: string; variant?: 'list' | 'home' 
     <View style={styles.loading} accessibilityRole="progressbar" accessibilityLabel={label} accessibilityLiveRegion="polite">
       <ActivityIndicator size="large" color={colors.red} />
       <Text style={styles.loadingLabel}>{label}</Text>
-      {slow ? <Text style={styles.loadingSlow}>This is taking a little longer than usual. Thanks for your patience.</Text> : null}
+      {slow ? <Text style={styles.loadingSlow}>{t('This is taking a little longer than usual. Thanks for your patience.')}</Text> : null}
     </View>
   );
 };

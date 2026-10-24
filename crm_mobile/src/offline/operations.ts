@@ -7,6 +7,7 @@ import { useAuthStore } from '../store/authStore';
 import { formatBr } from '../utils/formatCurrency';
 import { todayYmd, fromYmd } from '../utils/formatDate';
 import { OpType } from './types';
+import { tr } from '../i18n';
 
 // One entry per kind of change. Adding offline support for a new kind of change
 // means adding one entry here (and, if it changes what a list shows, one case
@@ -27,7 +28,7 @@ const daysUntil = (ymd: string) => Math.round((fromYmd(ymd).getTime() - fromYmd(
 
 export const OPS: Record<OpType, OpDef> = {
   'sale.create': {
-    label: (p) => `Sale · ${formatBr(p.items.reduce((s: number, i: any) => s + i.unit_price * i.qty, 0))}`,
+    label: (p) => `${tr('Sale')} · ${formatBr(p.items.reduce((s: number, i: any) => s + i.unit_price * i.qty, 0))}`,
     run: (p, opts) => salesApi.createSale(p, opts),
     optimistic: (p, localId): salesApi.Sale => {
       const items = p.items.map((i: any) => ({
@@ -42,7 +43,7 @@ export const OPS: Record<OpType, OpDef> = {
   },
 
   'product.create': {
-    label: (p) => `New product · ${p.name}`,
+    label: (p) => `${tr('New product')} · ${p.name}`,
     run: (p, opts) => productsApi.createProduct(p, opts),
     optimistic: (p, localId): productsApi.Product => ({
       id: localId!, name: p.name, brand: p.brand || null, category: p.category || null, specs: p.specs || null,
@@ -52,23 +53,23 @@ export const OPS: Record<OpType, OpDef> = {
     creates: true,
   },
   'product.update': {
-    label: (p) => `Edit product${p.data?.name ? ` · ${p.data.name}` : ''}`,
+    label: (p) => `${tr('Edit product')}${p.data?.name ? ` · ${p.data.name}` : ''}`,
     run: (p, opts) => productsApi.updateProduct(p.id, p.data, opts),
     optimistic: () => undefined,
   },
   'product.delete': {
-    label: (p) => `Remove product${p.name ? ` · ${p.name}` : ''}`,
+    label: (p) => `${tr('Remove product')}${p.name ? ` · ${p.name}` : ''}`,
     run: (p, opts) => productsApi.deleteProduct(p.id, opts),
     optimistic: () => undefined,
   },
   'product.restock': {
-    label: (p) => `Restock${p.name ? ` · ${p.name}` : ''} · +${p.qty}`,
+    label: (p) => `${tr('Restock')}${p.name ? ` · ${p.name}` : ''} · +${p.qty}`,
     run: (p, opts) => productsApi.restockProduct(p.id, { qty: p.qty, unit_cost: p.unit_cost, supplier: p.supplier }, opts),
     optimistic: () => undefined,
   },
 
   'customer.create': {
-    label: (p) => `New client · ${p.name}`,
+    label: (p) => `${tr('New client')} · ${p.name}`,
     run: (p, opts) => customersApi.createCustomer(p, opts),
     optimistic: (p, localId): customersApi.Customer => ({
       id: localId!, name: p.name, phone: p.phone || null, address: p.address || null, notes: null,
@@ -77,13 +78,13 @@ export const OPS: Record<OpType, OpDef> = {
     creates: true,
   },
   'customer.update': {
-    label: (p) => `Edit client${p.data?.name ? ` · ${p.data.name}` : ''}`,
+    label: (p) => `${tr('Edit client')}${p.data?.name ? ` · ${p.data.name}` : ''}`,
     run: (p, opts) => customersApi.updateCustomer(p.id, p.data, opts),
     optimistic: () => undefined,
   },
 
   'repair.create': {
-    label: (p) => `New repair · ${p.device_name}`,
+    label: (p) => `${tr('New repair')} · ${p.device_name}`,
     run: (p, opts) => repairsApi.createRepair(p, opts),
     optimistic: (p, localId): repairsApi.Repair => {
       const me = useAuthStore.getState().user;
@@ -100,17 +101,17 @@ export const OPS: Record<OpType, OpDef> = {
     creates: true,
   },
   'repair.advance': {
-    label: (p) => `${p.handover ? 'Hand over' : 'Move forward'} repair${p.name ? ` · ${p.name}` : ''}`,
+    label: (p) => `${p.handover ? tr('Hand over repair') : tr('Move repair forward')}${p.name ? ` · ${p.name}` : ''}`,
     run: (p, opts) => repairsApi.advanceRepairStatus(p.id, p.handover, opts),
     optimistic: () => undefined,
   },
   'repair.update': {
-    label: (p) => `Change promised day${p.name ? ` · ${p.name}` : ''}`,
+    label: (p) => `${tr('Change promised day')}${p.name ? ` · ${p.name}` : ''}`,
     run: (p, opts) => repairsApi.updateRepair(p.id, p.data, opts),
     optimistic: () => undefined,
   },
   'repair.assign': {
-    label: (p) => `Assign repair${p.name ? ` · ${p.name}` : ''}`,
+    label: (p) => `${tr('Assign repair')}${p.name ? ` · ${p.name}` : ''}`,
     run: (p, opts) => repairsApi.assignRepair(p.id, p.technician_id, opts),
     optimistic: () => undefined,
   },

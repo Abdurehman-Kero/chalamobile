@@ -6,6 +6,7 @@ import { LocalPhoto, ProductImage } from '../api/products';
 import { getErrorMessage } from '../api/errors';
 import { thumbUrl } from '../utils/images';
 import { toast } from '../store/toastStore';
+import { useT } from '../i18n';
 import { colors, radius, spacing } from '../theme';
 
 export const MAX_PHOTOS = 4;
@@ -35,6 +36,7 @@ const PICKER = { mediaType: 'photo' as const, quality: 0.8 as const, maxWidth: 1
  * the form once the product has been created (see uploadStaged).
  */
 export const ProductPhotos = forwardRef<ProductPhotosHandle, Props>(({ productId, canUploadNow }, ref) => {
+  const tt = useT();
   const [saved, setSaved] = useState<ProductImage[]>([]);
   const [staged, setStaged] = useState<LocalPhoto[]>([]);
   const [busy, setBusy] = useState(false);
@@ -69,20 +71,20 @@ export const ProductPhotos = forwardRef<ProductPhotosHandle, Props>(({ productId
       try {
         setSaved(await productsApi.uploadProductImages(productId, picked));
       } catch (err) {
-        toast.error(getErrorMessage(err, 'Could not upload the photo'));
+        toast.error(getErrorMessage(err, tt('Could not upload the photo')));
       } finally {
         setBusy(false);
       }
     } else {
       setStaged(s => [...s, ...picked]);
     }
-  }, [productId, canUploadNow, remaining]);
+  }, [productId, canUploadNow, remaining, tt]);
 
   const add = () => {
-    Alert.alert('Add a photo', undefined, [
-      { text: 'Take a photo', onPress: async () => addPicked((await launchCamera({ ...PICKER, saveToPhotos: false })).assets) },
-      { text: 'Choose from gallery', onPress: async () => addPicked((await launchImageLibrary({ ...PICKER, selectionLimit: remaining })).assets) },
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(tt('Add a photo'), undefined, [
+      { text: tt('Take a photo'), onPress: async () => addPicked((await launchCamera({ ...PICKER, saveToPhotos: false })).assets) },
+      { text: tt('Choose from gallery'), onPress: async () => addPicked((await launchImageLibrary({ ...PICKER, selectionLimit: remaining })).assets) },
+      { text: tt('Cancel'), style: 'cancel' },
     ]);
   };
 
@@ -96,7 +98,7 @@ export const ProductPhotos = forwardRef<ProductPhotosHandle, Props>(({ productId
       await productsApi.deleteProductImage(productId, t.imageId);
       setSaved(await productsApi.getProductImages(productId));
     } catch (err) {
-      toast.error(getErrorMessage(err, 'Could not remove the photo'));
+      toast.error(getErrorMessage(err, tt('Could not remove the photo')));
     } finally {
       setBusy(false);
     }
@@ -113,48 +115,48 @@ export const ProductPhotos = forwardRef<ProductPhotosHandle, Props>(({ productId
     try {
       setSaved(await productsApi.setProductCover(productId, t.imageId));
     } catch (err) {
-      toast.error(getErrorMessage(err, 'Could not change the cover photo'));
+      toast.error(getErrorMessage(err, tt('Could not change the cover photo')));
     } finally {
       setBusy(false);
     }
   };
 
   const onTilePress = (t: Tile) => {
-    Alert.alert(t.cover ? 'Cover photo' : 'Photo', undefined, [
-      ...(t.cover ? [] : [{ text: 'Make cover photo', onPress: () => makeCover(t) }]),
-      { text: 'Remove photo', style: 'destructive' as const, onPress: () => remove(t) },
-      { text: 'Cancel', style: 'cancel' as const },
+    Alert.alert(t.cover ? tt('Cover photo') : tt('Photo'), undefined, [
+      ...(t.cover ? [] : [{ text: tt('Make cover photo'), onPress: () => makeCover(t) }]),
+      { text: tt('Remove photo'), style: 'destructive' as const, onPress: () => remove(t) },
+      { text: tt('Cancel'), style: 'cancel' as const },
     ]);
   };
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.label}>PHOTOS · {tiles.length}/{MAX_PHOTOS}</Text>
+      <Text style={styles.label}>{tt('PHOTOS')} · {tiles.length}/{MAX_PHOTOS}</Text>
       <View style={styles.row}>
         {tiles.map(t => (
           <TouchableOpacity
             key={t.key} style={styles.tile} onPress={() => onTilePress(t)} activeOpacity={0.8}
-            accessibilityRole="button" accessibilityLabel={t.cover ? 'Cover photo, tap for options' : 'Photo, tap for options'}
+            accessibilityRole="button" accessibilityLabel={t.cover ? tt('Cover photo, tap for options') : tt('Photo, tap for options')}
           >
             <Image source={{ uri: thumbUrl(t.uri, 240) || t.uri }} style={styles.img} resizeMode="cover" />
-            {t.cover && <View style={styles.coverTag}><Text style={styles.coverText}>Cover</Text></View>}
+            {t.cover && <View style={styles.coverTag}><Text style={styles.coverText}>{tt('Cover')}</Text></View>}
           </TouchableOpacity>
         ))}
         {remaining > 0 && (
           <TouchableOpacity
             style={[styles.tile, styles.addTile]} onPress={add} disabled={busy} activeOpacity={0.7}
-            accessibilityRole="button" accessibilityLabel="Add a photo"
+            accessibilityRole="button" accessibilityLabel={tt('Add a photo')}
           >
             {busy
               ? <ActivityIndicator color={colors.navy} />
-              : <><Text style={styles.plus}>+</Text><Text style={styles.addText}>Add</Text></>}
+              : <><Text style={styles.plus}>+</Text><Text style={styles.addText}>{tt('Add')}</Text></>}
           </TouchableOpacity>
         )}
       </View>
       <Text style={styles.hint}>
         {productId != null && !canUploadNow
-          ? 'This product is still waiting to sync. Add photos once it has reached the server.'
-          : 'Customers see these on the web store. The first photo is the cover.'}
+          ? tt('This product is still waiting to sync. Add photos once it has reached the server.')
+          : tt('Customers see these on the web store. The first photo is the cover.')}
       </Text>
     </View>
   );

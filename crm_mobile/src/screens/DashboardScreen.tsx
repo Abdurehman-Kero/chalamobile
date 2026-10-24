@@ -17,32 +17,33 @@ import { EmptyState, LoadingState } from '../components/EmptyState';
 import { Badge } from '../components/Badge';
 import { CenterModal } from '../components/CenterModal';
 import { AlertsSheet } from '../components/AlertsSheet';
-import { SettingsSheet } from '../components/SettingsSheet';
 import { SalesHistorySheet, PAYMENT_LABELS } from '../components/SalesHistorySheet';
 import { TopLoader } from '../components/TopLoader';
 import { formatBr, formatBrCompact } from '../utils/formatCurrency';
 import { timeAgo, formatDayRelative } from '../utils/formatDate';
+import { tx, useT, useLang } from '../i18n';
+import { applyReminders } from '../reminders/useReminders';
 import { colors, tones, Tone, spacing, radius, shadow, layout } from '../theme';
 
 const CHART_H = 110;
 
 const greeting = () => {
   const h = new Date().getHours();
-  return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  return h < 12 ? tx('Good morning') : h < 17 ? tx('Good afternoon') : tx('Good evening');
 };
 
 const STAGE_LABEL: Record<string, string> = {
-  received: 'Received', diagnosing: 'Diagnosing', fixing: 'Fixing', completed: 'Ready', delivered: 'Delivered',
+  received: tx('Received'), diagnosing: tx('Diagnosing'), fixing: tx('Fixing'), completed: tx('Ready'), delivered: tx('Delivered'),
 };
 
 interface QuickAction { icon: string; tone: Tone; title: string; sub: string; to: string; params?: object }
 const ACTIONS: Record<string, QuickAction> = {
-  sale:    { icon: '💳', tone: 'green',  title: 'New sale',     sub: 'Open the sales screen',        to: 'POS' },
-  product: { icon: '📦', tone: 'blue',   title: 'Add product',  sub: 'Add an item to your stock',    to: 'Stock',   params: { openAdd: true } },
-  repair:  { icon: '🔧', tone: 'amber',  title: 'New repair',   sub: 'Register a device for repair', to: 'Repair',  params: { openAdd: true } },
-  client:  { icon: '👥', tone: 'purple', title: 'Add client',   sub: 'Save a customer’s details',    to: 'Clients', params: { openAdd: true } },
-  orders:  { icon: '🛍️', tone: 'amber',  title: 'Online orders', sub: 'Orders from the web store',   to: 'Orders' },
-  report:  { icon: '🧾', tone: 'red',    title: 'Daily report', sub: 'Sold, repaired and bought today', to: 'Report' },
+  sale:    { icon: '💳', tone: 'green',  title: tx('New sale'),     sub: tx('Open the sales screen'),        to: 'POS' },
+  product: { icon: '📦', tone: 'blue',   title: tx('Add product'),  sub: tx('Add an item to your stock'),    to: 'Stock',   params: { openAdd: true } },
+  repair:  { icon: '🔧', tone: 'amber',  title: tx('New repair'),   sub: tx('Register a device for repair'), to: 'Repair',  params: { openAdd: true } },
+  client:  { icon: '👥', tone: 'purple', title: tx('Add client'),   sub: tx('Save a customer’s details'),    to: 'Clients', params: { openAdd: true } },
+  orders:  { icon: '🛍️', tone: 'amber',  title: tx('Online orders'), sub: tx('Orders from the web store'),   to: 'Orders' },
+  report:  { icon: '🧾', tone: 'red',    title: tx('Daily report'), sub: tx('Sold, repaired and bought today'), to: 'Report' },
 };
 const ACTIONS_BY_ROLE = {
   owner: ['sale', 'orders', 'product', 'repair', 'client', 'report'],
@@ -51,6 +52,8 @@ const ACTIONS_BY_ROLE = {
 };
 
 export default function DashboardScreen() {
+  const t = useT();
+  const lang = useLang(s => s.lang);
   const navigation: any = useNavigation();
   const user = useAuthStore(s => s.user);
   const { role, isOwner, isSales, isTechnician } = useRole();
@@ -59,12 +62,12 @@ export default function DashboardScreen() {
   // The sales desk has no repairs, so there is nothing to fetch for them.
   const repairs = useResource('repairs', () => (isSales ? Promise.resolve([]) : repairsApi.getRepairs()), overlayRepairs);
   const alerts = useAlerts();
+  useEffect(() => { applyReminders(repairs.data); }, [repairs.data]);
   // Orders waiting for the shop to confirm (not needed by technicians).
   const orders = useResource('orders', () => (isTechnician ? Promise.resolve({ orders: [], pending: 0 }) : ordersApi.getOrders()));
   const pendingOrders = orders.data?.pending ?? 0;
 
   const [showActions, setShowActions] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [showSales, setShowSales] = useState(false);
   const [showAlerts, setShowAlerts] = useState(false);
 
@@ -99,13 +102,13 @@ export default function DashboardScreen() {
   );
 
   const go = (to: string, params?: object) => { setShowActions(false); navigation.navigate(to, params); };
-  const firstName = user?.name?.split(' ')[0] ?? 'there';
-  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' });
+  const firstName = user?.name?.split(' ')[0] ?? t('there');
+  const today = new Date().toLocaleDateString(lang === 'en' ? 'en-US' : lang === 'am' ? 'am-ET' : 'om-ET', { weekday: 'long', day: 'numeric', month: 'long' });
   const alertCount = alerts.visible.length;
   const actions = ACTIONS_BY_ROLE[role].map(k => ACTIONS[k]);
 
   const dueLabel = (r: repairsApi.Repair) =>
-    r.is_overdue ? 'Overdue' : r.promised_date ? `Due ${formatDayRelative(r.promised_date).toLowerCase()}` : STAGE_LABEL[r.status];
+    r.is_overdue ? t('Overdue') : r.promised_date ? t('Due {when}', { when: formatDayRelative(r.promised_date).toLowerCase() }) : t(STAGE_LABEL[r.status]);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
@@ -120,22 +123,22 @@ export default function DashboardScreen() {
         <View style={styles.greetRow}>
           <View style={styles.greetText}>
             <Text style={styles.greetSub}>{today}</Text>
-            <Text style={styles.greetMain} numberOfLines={1}>{greeting()}, {firstName}</Text>
+            <Text style={styles.greetMain} numberOfLines={1}>{t(greeting())}, {firstName}</Text>
           </View>
           <TouchableOpacity
             style={styles.bell}
             onPress={() => setShowAlerts(true)}
             accessibilityRole="button"
-            accessibilityLabel={alertCount ? `${alertCount} alerts` : 'Alerts'}
+            accessibilityLabel={alertCount ? t('{n} alerts', { n: alertCount }) : t('Alerts')}
           >
             <Text style={styles.bellIcon}>🔔</Text>
             {alertCount > 0 && <View style={styles.bellBadge}><Text style={styles.bellBadgeText}>{alertCount > 9 ? '9+' : alertCount}</Text></View>}
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.avatar}
-            onPress={() => setShowSettings(true)}
+            onPress={() => navigation.navigate('Profile')}
             accessibilityRole="button"
-            accessibilityLabel="Account and settings"
+            accessibilityLabel={t('Profile and settings')}
           >
             <Text style={styles.avatarText}>{firstName[0]?.toUpperCase()}</Text>
           </TouchableOpacity>
@@ -147,60 +150,60 @@ export default function DashboardScreen() {
             onPress={() => navigation.navigate('Orders')}
             activeOpacity={0.8}
             accessibilityRole="button"
-            accessibilityLabel={`${pendingOrders} new online orders. Open orders`}
+            accessibilityLabel={t('{n} new online orders. Open orders', { n: pendingOrders })}
           >
             <Text style={styles.ordersBannerIcon}>🛍️</Text>
             <View style={styles.listBody}>
-              <Text style={styles.ordersBannerTitle}>{pendingOrders} new online {pendingOrders === 1 ? 'order' : 'orders'}</Text>
-              <Text style={styles.ordersBannerSub}>Tap to confirm and call the customer</Text>
+              <Text style={styles.ordersBannerTitle}>{t(pendingOrders === 1 ? tx('{n} new online order') : tx('{n} new online orders'), { n: pendingOrders })}</Text>
+              <Text style={styles.ordersBannerSub}>{t('Tap to confirm and call the customer')}</Text>
             </View>
             <Text style={styles.chevron}>›</Text>
           </TouchableOpacity>
         )}
 
-        {dash.loading && !data && <LoadingState variant="home" label="Loading your business…" />}
+        {dash.loading && !data && <LoadingState variant="home" label={t('Loading your business…')} />}
 
         {dash.error && !data && (
-          <EmptyState emoji="📡" title="Can't load the dashboard" message={dash.error} actionLabel="Try again" onAction={dash.reload} />
+          <EmptyState emoji="📡" title={t("Can't load the dashboard")} message={dash.error} actionLabel={t('Try again')} onAction={dash.reload} />
         )}
 
         {data && m && (
           <View>
-            {dash.error && <InlineNotice message="Couldn't refresh. Showing saved numbers." onRetry={dash.reload} />}
+            {dash.error && <InlineNotice message={t("Couldn't refresh. Showing saved numbers.")} onRetry={dash.reload} />}
 
             {/* ---------------- Owner: the whole business ---------------- */}
             {isOwner && (
               <>
                 <View style={[styles.hero, shadow.md]}>
                   <View style={styles.heroAccent} />
-                  <Text style={styles.heroLabel}>Today's revenue</Text>
+                  <Text style={styles.heroLabel}>{t("Today's revenue")}</Text>
                   <Text style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>{formatBr(m.todayRevenue)}</Text>
                   <View style={styles.heroFoot}>
                     <View style={styles.heroStat}>
-                      <Text style={styles.heroStatLabel}>🛒 From sales</Text>
+                      <Text style={styles.heroStatLabel}>🛒 {t('From sales')}</Text>
                       <Text style={styles.heroStatValue}>{formatBr(m.salesRevenue)}</Text>
                     </View>
                     <View style={styles.heroDivider} />
                     <View style={styles.heroStat}>
-                      <Text style={styles.heroStatLabel}>🔧 From repairs</Text>
+                      <Text style={styles.heroStatLabel}>🔧 {t('From repairs')}</Text>
                       <Text style={styles.heroStatValue}>{formatBr(m.repairRevenue)}</Text>
                     </View>
                   </View>
                   <TouchableOpacity style={styles.heroLink} onPress={() => navigation.navigate('Report')} accessibilityRole="button">
-                    <Text style={styles.heroLinkText}>View today's report</Text>
+                    <Text style={styles.heroLinkText}>{t("View today's report")}</Text>
                     <Text style={styles.heroLinkArrow}>›</Text>
                   </TouchableOpacity>
                 </View>
 
                 <View style={styles.tiles}>
                   <View style={[styles.profitTile, shadow.sm, styles.tileGap]}>
-                    <Text style={styles.profitLabel}>Profit today</Text>
+                    <Text style={styles.profitLabel}>{t('Profit today')}</Text>
                     <Text style={[styles.profitValue, (m.todayProfit ?? 0) < 0 && styles.negative]} numberOfLines={1} adjustsFontSizeToFit>
                       {formatBr(m.todayProfit)}
                     </Text>
                   </View>
                   <View style={[styles.profitTile, shadow.sm]}>
-                    <Text style={styles.profitLabel}>Profit · 7 days</Text>
+                    <Text style={styles.profitLabel}>{t('Profit · 7 days')}</Text>
                     <Text style={[styles.profitValue, (m.weekProfit ?? 0) < 0 && styles.negative]} numberOfLines={1} adjustsFontSizeToFit>
                       {formatBr(m.weekProfit)}
                     </Text>
@@ -208,9 +211,9 @@ export default function DashboardScreen() {
                 </View>
 
                 <View style={styles.tiles}>
-                  <MetricCard icon="🔧" label="Active repairs" value={m.activeRepairs ?? 0} style={styles.tileGap}
-                    hint={(m.readyRepairs ?? 0) > 0 ? `${m.readyRepairs} ready` : undefined} variant="green" />
-                  <MetricCard icon="👥" label="Customers" value={m.totalCustomers ?? 0} />
+                  <MetricCard icon="🔧" label={t('Active repairs')} value={m.activeRepairs ?? 0} style={styles.tileGap}
+                    hint={(m.readyRepairs ?? 0) > 0 ? t('{n} ready', { n: m.readyRepairs ?? 0 }) : undefined} variant="green" />
+                  <MetricCard icon="👥" label={t('Customers')} value={m.totalCustomers ?? 0} />
                 </View>
               </>
             )}
@@ -220,23 +223,23 @@ export default function DashboardScreen() {
               <>
                 <View style={[styles.hero, shadow.md]}>
                   <View style={styles.heroAccent} />
-                  <Text style={styles.heroLabel}>My sales today</Text>
+                  <Text style={styles.heroLabel}>{t('My sales today')}</Text>
                   <Text style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>{formatBr(m.todayRevenue)}</Text>
                   <View style={styles.heroFoot}>
                     <View style={styles.heroStat}>
-                      <Text style={styles.heroStatLabel}>Sales made</Text>
+                      <Text style={styles.heroStatLabel}>{t('Sales made')}</Text>
                       <Text style={styles.heroStatValue}>{m.salesCount ?? 0}</Text>
                     </View>
                     <View style={styles.heroDivider} />
                     <View style={styles.heroStat}>
-                      <Text style={styles.heroStatLabel}>Units sold</Text>
+                      <Text style={styles.heroStatLabel}>{t('Units sold')}</Text>
                       <Text style={styles.heroStatValue}>{m.unitsSold ?? 0}</Text>
                     </View>
                   </View>
                 </View>
                 <View style={styles.tiles}>
-                  <MetricCard icon="👥" label="Customers" value={m.totalCustomers ?? 0} style={styles.tileGap} />
-                  <MetricCard icon="📦" label="Low on stock" value={m.lowStockCount ?? 0} variant={(m.lowStockCount ?? 0) > 0 ? 'amber' : 'neutral'} />
+                  <MetricCard icon="👥" label={t('Customers')} value={m.totalCustomers ?? 0} style={styles.tileGap} />
+                  <MetricCard icon="📦" label={t('Low on stock')} value={m.lowStockCount ?? 0} variant={(m.lowStockCount ?? 0) > 0 ? 'amber' : 'neutral'} />
                 </View>
               </>
             )}
@@ -246,22 +249,22 @@ export default function DashboardScreen() {
               <>
                 <View style={[styles.hero, shadow.md]}>
                   <View style={styles.heroAccent} />
-                  <Text style={styles.heroLabel}>My open jobs</Text>
+                  <Text style={styles.heroLabel}>{t('My open jobs')}</Text>
                   <Text style={styles.heroValue}>{m.activeRepairs ?? 0}</Text>
                   <View style={styles.heroFoot}>
                     <View style={styles.heroStat}>
-                      <Text style={styles.heroStatLabel}>Due soon</Text>
+                      <Text style={styles.heroStatLabel}>{t('Due soon')}</Text>
                       <Text style={styles.heroStatValue}>{m.dueSoonCount ?? 0}</Text>
                     </View>
                     <View style={styles.heroDivider} />
                     <View style={styles.heroStat}>
-                      <Text style={styles.heroStatLabel}>Finished today</Text>
+                      <Text style={styles.heroStatLabel}>{t('Finished today')}</Text>
                       <Text style={styles.heroStatValue}>{m.completedToday ?? 0}</Text>
                     </View>
                   </View>
                 </View>
                 <View style={styles.tiles}>
-                  <MetricCard icon="✅" label="Ready to collect" value={m.readyRepairs ?? 0} variant="green" />
+                  <MetricCard icon="✅" label={t('Ready to collect')} value={m.readyRepairs ?? 0} variant="green" />
                 </View>
               </>
             )}
@@ -271,14 +274,14 @@ export default function DashboardScreen() {
               <View style={[styles.card, shadow.sm]}>
                 <View style={styles.cardHead}>
                   <View>
-                    <Text style={styles.cardTitle}>{isOwner ? 'Revenue, last 7 days' : 'My sales, last 7 days'}</Text>
-                    <Text style={styles.cardSub}>{formatBrCompact(weekly.total)} in total</Text>
+                    <Text style={styles.cardTitle}>{isOwner ? t('Revenue, last 7 days') : t('My sales, last 7 days')}</Text>
+                    <Text style={styles.cardSub}>{t('{amount} in total', { amount: formatBrCompact(weekly.total) })}</Text>
                   </View>
                   {weekly.changePct !== null && (
                     <Badge label={`${weekly.changePct >= 0 ? '▲' : '▼'} ${Math.abs(weekly.changePct)}%`} variant={weekly.changePct >= 0 ? 'green' : 'red'} />
                   )}
                 </View>
-                <View style={styles.chart} accessibilityLabel="Revenue for the last seven days">
+                <View style={styles.chart} accessibilityLabel={t('Revenue for the last seven days')}>
                   {weekly.labels.map((label, i) => {
                     const v = weekly.values[i];
                     const isToday = i === weekly.labels.length - 1;
@@ -302,14 +305,14 @@ export default function DashboardScreen() {
             {!isTechnician && (
               <>
                 <View style={styles.sectionHead}>
-                  <Text style={styles.sectionTitle}>{isOwner ? 'Recent sales' : 'My recent sales'}</Text>
+                  <Text style={styles.sectionTitle}>{isOwner ? t('Recent sales') : t('My recent sales')}</Text>
                   <TouchableOpacity onPress={() => setShowSales(true)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-                    <Text style={styles.sectionLink}>See all ›</Text>
+                    <Text style={styles.sectionLink}>{t('See all')} ›</Text>
                   </TouchableOpacity>
                 </View>
                 {recentSales.length === 0 ? (
                   <View style={[styles.card, shadow.sm]}>
-                    <Text style={styles.emptyLine}>No sales yet. Make a sale from the Sell tab.</Text>
+                    <Text style={styles.emptyLine}>{t('No sales yet. Make a sale from the Sell tab.')}</Text>
                   </View>
                 ) : recentSales.map(item => {
                   const lines = item.description.split(', ');
@@ -317,9 +320,9 @@ export default function DashboardScreen() {
                     <View key={item.id} style={[styles.listCard, shadow.sm]}>
                       <View style={[styles.listIcon, { backgroundColor: tones.green.bg }]}><Text style={styles.listEmoji}>💳</Text></View>
                       <View style={styles.listBody}>
-                        <Text style={styles.listName} numberOfLines={1}>{lines[0]}{lines.length > 1 ? ` +${lines.length - 1} more` : ''}</Text>
+                        <Text style={styles.listName} numberOfLines={1}>{lines[0]}{lines.length > 1 ? ` ${t('+{n} more', { n: lines.length - 1 })}` : ''}</Text>
                         <Text style={styles.listSub} numberOfLines={1}>
-                          {item.customer || 'Walk-in'} · {PAYMENT_LABELS[item.method ?? ''] || item.method} · {timeAgo(item.time)}
+                          {item.customer || t('Walk-in')} · {t(PAYMENT_LABELS[item.method ?? ''] || item.method || '')} · {timeAgo(item.time)}
                         </Text>
                       </View>
                       <Text style={styles.listAmount}>+{formatBr(item.amount)}</Text>
@@ -333,14 +336,14 @@ export default function DashboardScreen() {
             {!isSales && (
               <>
                 <View style={[styles.sectionHead, !isTechnician && styles.sectionGap]}>
-                  <Text style={styles.sectionTitle}>{isTechnician ? 'My jobs' : 'Repairs to follow up'}</Text>
+                  <Text style={styles.sectionTitle}>{isTechnician ? t('My jobs') : t('Repairs to follow up')}</Text>
                   <TouchableOpacity onPress={() => navigation.navigate('Repair')} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-                    <Text style={styles.sectionLink}>All ›</Text>
+                    <Text style={styles.sectionLink}>{t('All')} ›</Text>
                   </TouchableOpacity>
                 </View>
                 {needsAttention.length === 0 ? (
                   <View style={[styles.card, shadow.sm]}>
-                    <Text style={styles.emptyLine}>No open repairs. Nothing to follow up.</Text>
+                    <Text style={styles.emptyLine}>{t('No open repairs. Nothing to follow up.')}</Text>
                   </View>
                 ) : needsAttention.map(r => (
                   <TouchableOpacity
@@ -352,7 +355,7 @@ export default function DashboardScreen() {
                     <View style={[styles.listIcon, { backgroundColor: tones.amber.bg }]}><Text style={styles.listEmoji}>🔧</Text></View>
                     <View style={styles.listBody}>
                       <Text style={styles.listName} numberOfLines={1}>{r.device_name}</Text>
-                      <Text style={styles.listSub} numberOfLines={1}>{r.ticket_number} · {r.customer_name || 'No name'}</Text>
+                      <Text style={styles.listSub} numberOfLines={1}>{r.ticket_number} · {r.customer_name || t('No name')}</Text>
                     </View>
                     <Badge label={dueLabel(r)} variant={r.is_overdue ? 'red' : (r.days_until_due ?? 9) <= 1 ? 'amber' : 'blue'} />
                   </TouchableOpacity>
@@ -368,18 +371,18 @@ export default function DashboardScreen() {
         onPress={() => setShowActions(true)}
         activeOpacity={0.85}
         accessibilityRole="button"
-        accessibilityLabel="Quick actions"
+        accessibilityLabel={t('Quick actions')}
       >
         <Text style={styles.fabIcon}>+</Text>
       </TouchableOpacity>
 
-      <CenterModal visible={showActions} onClose={() => setShowActions(false)} title="Quick actions">
+      <CenterModal visible={showActions} onClose={() => setShowActions(false)} title={t('Quick actions')}>
         {actions.map(a => (
           <TouchableOpacity key={a.title} style={styles.actionItem} activeOpacity={0.7} onPress={() => go(a.to, a.params)} accessibilityRole="button">
             <View style={[styles.actionIcon, { backgroundColor: tones[a.tone].bg }]}><Text style={styles.actionEmoji}>{a.icon}</Text></View>
             <View style={styles.listBody}>
-              <Text style={styles.actionItemTitle}>{a.title}</Text>
-              <Text style={styles.actionItemSub}>{a.sub}</Text>
+              <Text style={styles.actionItemTitle}>{t(a.title)}</Text>
+              <Text style={styles.actionItemSub}>{t(a.sub)}</Text>
             </View>
             <Text style={styles.chevron}>›</Text>
           </TouchableOpacity>
@@ -395,7 +398,6 @@ export default function DashboardScreen() {
         onOpenRepairs={() => navigation.navigate('Repair')}
         canRestock={isOwner}
       />
-      <SettingsSheet visible={showSettings} onClose={() => setShowSettings(false)} />
       <SalesHistorySheet visible={showSales} onClose={() => setShowSales(false)} />
     </SafeAreaView>
   );

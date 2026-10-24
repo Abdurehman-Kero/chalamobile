@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { useFormScroll } from './FormModal';
 import { Icon } from './Icon';
+import { useT } from '../i18n';
 import { colors, spacing } from '../theme';
 
 export interface FormInputProps extends TextInputProps {
@@ -31,6 +32,7 @@ export const FormInput = forwardRef<any, FormInputProps>(({
   onBlur,
   ...rest
 }, ref) => {
+  const t = useT();
   const [focused, setFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const inputRef = useRef<any>(null);
@@ -93,7 +95,7 @@ export const FormInput = forwardRef<any, FormInputProps>(({
             onPress={() => setShowPassword((prev) => !prev)}
             activeOpacity={0.7}
             hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
-            accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+            accessibilityLabel={showPassword ? t('Hide password') : t('Show password')}
             accessibilityRole="button"
           >
             <Icon name={showPassword ? 'eye-off' : 'eye'} size={20} color={colors.text2} />

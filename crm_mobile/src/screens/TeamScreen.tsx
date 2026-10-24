@@ -19,18 +19,20 @@ import { FormInput } from '../components/FormInput';
 import { ChipRow } from '../components/ChipRow';
 import { TopLoader } from '../components/TopLoader';
 import { FadeInView, rowDelay } from '../components/FadeInView';
+import { tx, useT } from '../i18n';
 import { colors, avatarColors, Tone, spacing, radius, shadow, layout } from '../theme';
 
 const ROLES: { key: Role; label: string; blurb: string; tone: Tone }[] = [
-  { key: 'sales', label: 'Sales', blurb: 'Sells products and manages clients. Cannot see costs, profit or repairs.', tone: 'blue' },
-  { key: 'technician', label: 'Technician', blurb: 'Works on repair jobs only. Sees nothing about sales or stock.', tone: 'amber' },
-  { key: 'owner', label: 'Admin', blurb: 'Sees and manages everything, including the team.', tone: 'red' },
+  { key: 'sales', label: tx('Sales'), blurb: tx('Sells products and manages clients. Cannot see costs, profit or repairs.'), tone: 'blue' },
+  { key: 'technician', label: tx('Technician'), blurb: tx('Works on repair jobs only. Sees nothing about sales or stock.'), tone: 'amber' },
+  { key: 'owner', label: tx('Admin'), blurb: tx('Sees and manages everything, including the team.'), tone: 'red' },
 ];
 const roleTone = (r: Role): Tone => ROLES.find(x => x.key === r)?.tone ?? 'neutral';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function TeamScreen() {
+  const t = useT();
   const navigation: any = useNavigation();
   const me = useAuthStore(s => s.user);
 
@@ -51,30 +53,41 @@ export default function TeamScreen() {
     setFormOpen(true);
   };
   const openEdit = (m: TeamMember) => {
+    // Your own details (and password) are changed from the Profile page, where your current password is asked for.
+    if (m.id === me?.id) { navigation.navigate('Profile'); return; }
     setEditing(m); setName(m.name); setEmail(m.email); setPassword(''); setRole(m.role); setErrors({});
     setFormOpen(true);
   };
 
   const save = async () => {
     const e: typeof errors = {};
-    if (!name.trim()) e.name = 'Enter the person’s name';
-    if (!editing && !EMAIL_RE.test(email.trim())) e.email = 'Enter a valid email address';
-    if ((!editing || password) && password.length < 6) e.password = 'Use at least 6 characters';
+    if (!name.trim()) e.name = t('Enter the person’s name');
+    if (!EMAIL_RE.test(email.trim())) e.email = t('Enter a valid email address');
+    if ((!editing || password) && password.length < 6) e.password = t('Use at least 6 characters');
     setErrors(e);
     if (Object.keys(e).length) return;
 
     setSaving(true);
     try {
       if (editing) {
-        await usersApi.updateUser(editing.id, { name: name.trim(), role, ...(password ? { password } : {}) });
+        const saved = await usersApi.updateUser(editing.id, {
+          name: name.trim(), email: email.trim(), role, ...(password ? { password } : {}),
+        });
+        // A server that has not been updated yet ignores the new email without saying so.
+        if (saved && saved.email.toLowerCase() !== email.trim().toLowerCase()) {
+          toast.error(t('The server needs to be updated before this works. Please tell the shop owner.'));
+          setFormOpen(false);
+          reload();
+          return;
+        }
       } else {
         await usersApi.createUser({ name: name.trim(), email: email.trim(), password, role });
       }
       setFormOpen(false);
-      toast.success(editing ? 'Changes saved' : `${name.trim()} can now sign in`);
+      toast.success(editing ? t('Changes saved') : t('{name} can now sign in', { name: name.trim() }));
       reload();
     } catch (err: any) {
-      const msg = getErrorMessage(err, 'Could not save');
+      const msg = getErrorMessage(err, t('Could not save'));
       if (err?.response?.data?.code === 'DUPLICATE_EMAIL') setErrors({ email: msg });
       else toast.error(msg);
     } finally {
@@ -85,10 +98,10 @@ export default function TeamScreen() {
   const setActive = async (m: TeamMember, active: boolean) => {
     try {
       await usersApi.updateUser(m.id, { is_active: active });
-      toast.success(active ? `${m.name} can sign in again` : `${m.name} can no longer sign in`);
+      toast.success(active ? t('{name} can sign in again', { name: m.name }) : t('{name} can no longer sign in', { name: m.name }));
       reload();
     } catch (err) {
-      toast.error(getErrorMessage(err, 'Could not update the account'));
+      toast.error(getErrorMessage(err, t('Could not update the account')));
     }
   };
 
@@ -101,7 +114,7 @@ export default function TeamScreen() {
         onPress={() => openEdit(item)}
         activeOpacity={0.75}
         accessibilityRole="button"
-        accessibilityLabel={`${item.name}, ${ROLE_LABEL[item.role]}${item.is_active ? '' : ', disabled'}`}
+        accessibilityLabel={`${item.name}, ${t(ROLE_LABEL[item.role])}${item.is_active ? '' : `, ${t('Disabled')}`}`}
       >
         <View style={[styles.avatar, { backgroundColor: avatarColors[index % avatarColors.length] }]}>
           <Text style={styles.avatarText}>{item.name[0]?.toUpperCase()}</Text>
@@ -109,10 +122,10 @@ export default function TeamScreen() {
         <View style={styles.body}>
           <View style={styles.nameRow}>
             <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
-            {isMe && <Text style={styles.you}> (you)</Text>}
+            {isMe && <Text style={styles.you}> {t('(you)')}</Text>}
           </View>
           <Text style={styles.email} numberOfLines={1}>{item.email}</Text>
-          <Badge label={item.is_active ? ROLE_LABEL[item.role] : 'Disabled'} variant={item.is_active ? roleTone(item.role) : 'neutral'} style={styles.badge} />
+          <Badge label={item.is_active ? t(ROLE_LABEL[item.role]) : t('Disabled')} variant={item.is_active ? roleTone(item.role) : 'neutral'} style={styles.badge} />
         </View>
         {!isMe && (
           <Switch
@@ -120,7 +133,7 @@ export default function TeamScreen() {
             onValueChange={(v) => setActive(item, v)}
             trackColor={{ false: colors.border2, true: colors.green }}
             thumbColor={colors.white}
-            accessibilityLabel={`${item.name} can sign in`}
+            accessibilityLabel={t('{name} can sign in', { name: item.name })}
           />
         )}
       </TouchableOpacity>
@@ -128,22 +141,22 @@ export default function TeamScreen() {
     );
   };
 
-  const emptyList = loading && !data ? <LoadingState label="Loading team…" />
-    : error && !data ? <EmptyState emoji="📡" title="Can't load the team" message={error} actionLabel="Try again" onAction={reload} />
-    : <EmptyState emoji="👥" title="No team members" />;
+  const emptyList = loading && !data ? <LoadingState label={t('Loading team…')} />
+    : error && !data ? <EmptyState emoji="📡" title={t("Can't load the team")} message={error} actionLabel={t('Try again')} onAction={reload} />
+    : <EmptyState emoji="👥" title={t('No team members')} />;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right', 'bottom']}>
       <OfflineBanner />
       <View style={styles.header}>
-        <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()} accessibilityRole="button" accessibilityLabel="Go back">
+        <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()} accessibilityRole="button" accessibilityLabel={t('Back')}>
           <Text style={styles.backIcon}>‹</Text>
         </TouchableOpacity>
         <View style={styles.titles}>
-          <Text style={styles.title}>Team</Text>
-          <Text style={styles.sub}>{members.filter(m => m.is_active).length} people can sign in</Text>
+          <Text style={styles.title}>{t('Team')}</Text>
+          <Text style={styles.sub}>{t('{n} people can sign in', { n: members.filter(m => m.is_active).length })}</Text>
         </View>
-        <Button title="+ Add" size="sm" onPress={openAdd} />
+        <Button title={t('+ Add')} size="sm" onPress={openAdd} />
       </View>
 
       <TopLoader active={fetching && !!data} />
@@ -155,39 +168,37 @@ export default function TeamScreen() {
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[colors.red]} />}
-        ListHeaderComponent={error && data ? <InlineNotice message="Couldn't refresh. Showing the saved team." onRetry={reload} /> : undefined}
+        ListHeaderComponent={error && data ? <InlineNotice message={t("Couldn't refresh. Showing the saved team.")} onRetry={reload} /> : undefined}
         ListEmptyComponent={emptyList}
       />
 
       <FormModal
         visible={formOpen}
         onClose={() => setFormOpen(false)}
-        title={editing ? 'Edit team member' : 'Add team member'}
-        subtitle={editing ? editing.email : 'They sign in with this email and password'}
-        footer={<Button title={editing ? 'Save changes' : 'Create account'} onPress={save} loading={saving} />}
+        title={editing ? t('Edit team member') : t('Add team member')}
+        subtitle={editing ? editing.email : t('They sign in with this email and password')}
+        footer={<Button title={editing ? t('Save changes') : t('Create account')} onPress={save} loading={saving} />}
       >
-        <FormInput label="Full name *" value={name} onChangeText={v => { setName(v); setErrors(x => ({ ...x, name: undefined })); }} placeholder="e.g. Chala" autoCapitalize="words" error={errors.name} />
-        {!editing && (
-          <FormInput
-            label="Email *" value={email} onChangeText={v => { setEmail(v); setErrors(x => ({ ...x, email: undefined })); }}
+        <FormInput label={t('Full name *')} value={name} onChangeText={v => { setName(v); setErrors(x => ({ ...x, name: undefined })); }} placeholder={t('e.g. Chala')} autoCapitalize="words" error={errors.name} />
+        <FormInput
+            label={t('Email *')} value={email} onChangeText={v => { setEmail(v); setErrors(x => ({ ...x, email: undefined })); }}
             placeholder="name@example.com" keyboardType="email-address" autoCapitalize="none" autoCorrect={false} error={errors.email}
           />
-        )}
         <FormInput
-          label={editing ? 'New password (leave empty to keep)' : 'Password *'}
+          label={editing ? t('New password (leave empty to keep)') : t('Password *')}
           value={password} onChangeText={v => { setPassword(v); setErrors(x => ({ ...x, password: undefined })); }}
-          placeholder="At least 6 characters" isPassword autoCapitalize="none" error={errors.password}
-          helperText={editing ? 'Fill this in only to reset their password.' : 'Tell them this password so they can sign in.'}
+          placeholder={t('At least 6 characters')} isPassword autoCapitalize="none" error={errors.password}
+          helperText={editing ? t('Fill this in only to reset their password.') : t('Tell them this password so they can sign in.')}
         />
 
-        <Text style={styles.roleLabel}>ROLE</Text>
+        <Text style={styles.roleLabel}>{t('ROLE')}</Text>
         <ChipRow
           variant="form"
-          items={ROLES.map(r => ({ key: r.key, label: r.label }))}
+          items={ROLES.map(r => ({ key: r.key, label: t(r.label) }))}
           selected={role}
           onSelect={(k) => setRole(k as Role)}
         />
-        <Text style={styles.roleBlurb}>{ROLES.find(r => r.key === role)?.blurb}</Text>
+        <Text style={styles.roleBlurb}>{t(ROLES.find(r => r.key === role)?.blurb ?? '')}</Text>
       </FormModal>
     </SafeAreaView>
   );

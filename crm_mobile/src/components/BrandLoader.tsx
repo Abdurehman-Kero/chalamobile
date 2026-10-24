@@ -1,9 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { ActivityIndicator, Animated, Easing, StyleSheet, Text, View } from 'react-native';
+import { useT } from '../i18n';
 import { colors, spacing } from '../theme';
 
 // Full-screen loader for app start: the logo breathes while a spinner turns beneath it.
-export const BrandLoader: React.FC<{ label?: string }> = ({ label = 'Getting things ready' }) => {
+export const BrandLoader: React.FC<{ label?: string }> = ({ label }) => {
+  const t = useT();
+  label = label ?? t('Getting things ready');
   const pulse = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {

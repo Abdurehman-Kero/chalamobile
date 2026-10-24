@@ -15,6 +15,7 @@ import { PAYMENT_LABELS } from '../components/SalesHistorySheet';
 import { TopLoader } from '../components/TopLoader';
 import { formatBr } from '../utils/formatCurrency';
 import { addDaysYmd, formatDay, formatDayRelative, todayYmd } from '../utils/formatDate';
+import { tx, useT } from '../i18n';
 import { colors, spacing, radius, shadow, layout } from '../theme';
 
 type Tab = 'sales' | 'repairs' | 'bought';
@@ -23,7 +24,7 @@ const timeOf = (iso: string | null) =>
   iso ? new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '';
 
 const STATUS_LABEL: Record<string, string> = {
-  received: 'Received', diagnosing: 'Diagnosing', fixing: 'Fixing', completed: 'Ready', delivered: 'Handed over',
+  received: tx('Received'), diagnosing: tx('Diagnosing'), fixing: tx('Fixing'), completed: tx('Ready'), delivered: tx('Handed over'),
 };
 
 // Remounts when the day changes, so a previous day's figures never show under a new date.
@@ -33,6 +34,7 @@ export default function ReportScreen() {
 }
 
 function ReportContent({ date, setDate }: { date: string; setDate: (d: string) => void }) {
+  const t = useT();
   const navigation: any = useNavigation();
   const [tab, setTab] = useState<Tab>('sales');
   const [exporting, setExporting] = useState<'pdf' | 'image' | null>(null);
@@ -45,10 +47,10 @@ function ReportContent({ date, setDate }: { date: string; setDate: (d: string) =
   const s = data?.summary;
 
   const tabs: { key: Tab; label: string; count: number }[] = useMemo(() => [
-    { key: 'sales', label: 'Sold', count: data?.sales.length ?? 0 },
-    { key: 'repairs', label: 'Repaired', count: data?.repairs.length ?? 0 },
-    { key: 'bought', label: 'Bought', count: data?.purchases.length ?? 0 },
-  ], [data]);
+    { key: 'sales', label: t('Sold'), count: data?.sales.length ?? 0 },
+    { key: 'repairs', label: t('Repaired'), count: data?.repairs.length ?? 0 },
+    { key: 'bought', label: t('Bought'), count: data?.purchases.length ?? 0 },
+  ], [data, t]);
 
   // PDF and image are opened in the phone's browser, where they can be saved or shared.
   const openExport = async (kind: 'pdf' | 'image') => {
@@ -57,7 +59,7 @@ function ReportContent({ date, setDate }: { date: string; setDate: (d: string) =
       const links = await reportsApi.getExportLinks(date);
       await Linking.openURL(kind === 'pdf' ? links.pdf : links.image);
     } catch (err) {
-      toast.error(getErrorMessage(err, 'Could not create the file'));
+      toast.error(getErrorMessage(err, t('Could not create the file')));
     } finally {
       setExporting(null);
     }
@@ -66,20 +68,20 @@ function ReportContent({ date, setDate }: { date: string; setDate: (d: string) =
   const shareText = async () => {
     if (!data || !s) return;
     const lines = [
-      `ChalaMob · Daily report`,
-      formatDay(data.date) + (isToday ? ' (today)' : ''),
+      `Chala Mobile · ${t('Daily report')}`,
+      formatDay(data.date) + (isToday ? ` (${t('Today').toLowerCase()})` : ''),
       '',
-      `Revenue: ${formatBr(s.total_revenue)}`,
-      `  Sales: ${formatBr(s.sales_revenue)}`,
-      `  Repairs: ${formatBr(s.repair_revenue)}`,
-      `Spent on stock: ${formatBr(s.purchases_total)}`,
-      `Profit: ${formatBr(s.total_profit)}`,
+      `${t('Revenue')}: ${formatBr(s.total_revenue)}`,
+      `  ${t('Sales')}: ${formatBr(s.sales_revenue)}`,
+      `  ${t('Repairs')}: ${formatBr(s.repair_revenue)}`,
+      `${t('Spent on stock')}: ${formatBr(s.purchases_total)}`,
+      `${t('Profit')}: ${formatBr(s.total_profit)}`,
       '',
-      `${data.sales.length} sales · ${s.units_sold} units`,
-      `${data.repairs.length} repairs · ${s.repairs_delivered} handed over`,
-      `${data.purchases.length} purchases`,
+      `${t('{n} sales', { n: data.sales.length })} · ${t('{n} units', { n: s.units_sold })}`,
+      `${t('{n} repairs', { n: data.repairs.length })} · ${t('{n} handed over', { n: s.repairs_delivered })}`,
+      `${t('{n} purchases', { n: data.purchases.length })}`,
     ];
-    try { await Share.share({ message: lines.join('\n'), title: 'Daily report' }); } catch { /* user closed the sheet */ }
+    try { await Share.share({ message: lines.join('\n'), title: t('Daily report') }); } catch { /* user closed the sheet */ }
   };
 
   return (
@@ -87,19 +89,19 @@ function ReportContent({ date, setDate }: { date: string; setDate: (d: string) =
       <OfflineBanner />
 
       <View style={styles.header}>
-        <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()} accessibilityRole="button" accessibilityLabel="Go back">
+        <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()} accessibilityRole="button" accessibilityLabel={t('Back')}>
           <Text style={styles.backIcon}>‹</Text>
         </TouchableOpacity>
         <View style={styles.titles}>
-          <Text style={styles.title}>Daily report</Text>
+          <Text style={styles.title}>{t('Daily report')}</Text>
           <Text style={styles.sub}>{formatDay(date)}</Text>
         </View>
         <View style={styles.dayNav}>
-          <TouchableOpacity style={styles.navBtn} onPress={() => setDate(addDaysYmd(date, -1))} accessibilityLabel="Previous day">
+          <TouchableOpacity style={styles.navBtn} onPress={() => setDate(addDaysYmd(date, -1))} accessibilityLabel={t('Previous day')}>
             <Text style={styles.navIcon}>‹</Text>
           </TouchableOpacity>
           <Text style={styles.navLabel}>{formatDayRelative(date)}</Text>
-          <TouchableOpacity style={[styles.navBtn, isToday && styles.navOff]} disabled={isToday} onPress={() => setDate(addDaysYmd(date, 1))} accessibilityLabel="Next day">
+          <TouchableOpacity style={[styles.navBtn, isToday && styles.navOff]} disabled={isToday} onPress={() => setDate(addDaysYmd(date, 1))} accessibilityLabel={t('Next day')}>
             <Text style={styles.navIcon}>›</Text>
           </TouchableOpacity>
         </View>
@@ -112,26 +114,26 @@ function ReportContent({ date, setDate }: { date: string; setDate: (d: string) =
         contentContainerStyle={styles.scroll}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[colors.red]} />}
       >
-        {loading && !data && <LoadingState variant="home" label="Building the report…" />}
-        {error && !data && <EmptyState emoji="📡" title="Can't load the report" message={error} actionLabel="Try again" onAction={reload} />}
+        {loading && !data && <LoadingState variant="home" label={t('Building the report…')} />}
+        {error && !data && <EmptyState emoji="📡" title={t("Can't load the report")} message={error} actionLabel={t('Try again')} onAction={reload} />}
 
         {data && s && (
           <View>
-            {error && <InlineNotice message="Couldn't refresh. Showing the saved report." onRetry={reload} />}
+            {error && <InlineNotice message={t("Couldn't refresh. Showing the saved report.")} onRetry={reload} />}
 
             {/* Money in, split by where it came from */}
             <View style={[styles.hero, shadow.md]}>
               <View style={styles.heroAccent} />
-              <Text style={styles.heroLabel}>Total revenue</Text>
+              <Text style={styles.heroLabel}>{t('Total revenue')}</Text>
               <Text style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>{formatBr(s.total_revenue)}</Text>
               <View style={styles.split}>
                 <View style={styles.splitCol}>
-                  <Text style={styles.splitLabel}>🛒 From sales</Text>
+                  <Text style={styles.splitLabel}>🛒 {t('From sales')}</Text>
                   <Text style={styles.splitValue}>{formatBr(s.sales_revenue)}</Text>
                 </View>
                 <View style={styles.splitLine} />
                 <View style={styles.splitCol}>
-                  <Text style={styles.splitLabel}>🔧 From repairs</Text>
+                  <Text style={styles.splitLabel}>🔧 {t('From repairs')}</Text>
                   <Text style={styles.splitValue}>{formatBr(s.repair_revenue)}</Text>
                 </View>
               </View>
@@ -139,34 +141,34 @@ function ReportContent({ date, setDate }: { date: string; setDate: (d: string) =
 
             <View style={styles.pair}>
               <View style={[styles.stat, shadow.sm, styles.statGap]}>
-                <Text style={styles.statLabel}>Profit</Text>
+                <Text style={styles.statLabel}>{t('Profit')}</Text>
                 <Text style={[styles.statValue, { color: s.total_profit >= 0 ? colors.greenDark : colors.redDark }]} numberOfLines={1} adjustsFontSizeToFit>
                   {formatBr(s.total_profit)}
                 </Text>
-                <Text style={styles.statHint}>Sales {formatBr(s.sales_profit)} · Repairs {formatBr(s.repair_profit)}</Text>
+                <Text style={styles.statHint}>{t('Sales')} {formatBr(s.sales_profit)} · {t('Repairs')} {formatBr(s.repair_profit)}</Text>
               </View>
               <View style={[styles.stat, shadow.sm]}>
-                <Text style={styles.statLabel}>Spent on stock</Text>
+                <Text style={styles.statLabel}>{t('Spent on stock')}</Text>
                 <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>{formatBr(s.purchases_total)}</Text>
-                <Text style={styles.statHint}>{s.purchases_count} {s.purchases_count === 1 ? 'purchase' : 'purchases'}</Text>
+                <Text style={styles.statHint}>{t(s.purchases_count === 1 ? tx('{n} purchase') : tx('{n} purchases'), { n: s.purchases_count })}</Text>
               </View>
             </View>
 
             {/* What happened */}
             <View style={styles.segment} accessibilityRole="tablist">
-              {tabs.map(t => {
-                const active = t.key === tab;
+              {tabs.map(tb => {
+                const active = tb.key === tab;
                 return (
                   <TouchableOpacity
-                    key={t.key}
+                    key={tb.key}
                     style={[styles.seg, active && styles.segActive]}
-                    onPress={() => setTab(t.key)}
+                    onPress={() => setTab(tb.key)}
                     accessibilityRole="tab"
                     accessibilityState={{ selected: active }}
                   >
-                    <Text style={[styles.segText, active && styles.segTextActive]}>{t.label}</Text>
+                    <Text style={[styles.segText, active && styles.segTextActive]}>{tb.label}</Text>
                     <View style={[styles.segCount, active && styles.segCountActive]}>
-                      <Text style={[styles.segCountText, active && styles.segTextActive]}>{t.count}</Text>
+                      <Text style={[styles.segCountText, active && styles.segTextActive]}>{tb.count}</Text>
                     </View>
                   </TouchableOpacity>
                 );
@@ -174,13 +176,13 @@ function ReportContent({ date, setDate }: { date: string; setDate: (d: string) =
             </View>
 
             {tab === 'sales' && (data.sales.length === 0
-              ? <EmptyState emoji="🛒" title="Nothing sold" message={isToday ? 'Sales made today will appear here.' : 'No sales on this day.'} />
+              ? <EmptyState emoji="🛒" title={t('Nothing sold')} message={isToday ? t('Sales made today will appear here.') : t('No sales on this day.')} />
               : data.sales.map(x => (
                 <View key={x.id} style={[styles.row, shadow.sm]}>
                   <View style={styles.rowBody}>
-                    <Text style={styles.rowTitle} numberOfLines={2}>{x.items.map(i => `${i.name} ×${i.qty}`).join(', ') || 'Sale'}</Text>
+                    <Text style={styles.rowTitle} numberOfLines={2}>{x.items.map(i => `${i.name} ×${i.qty}`).join(', ') || t('Sale')}</Text>
                     <Text style={styles.rowMeta} numberOfLines={1}>
-                      {timeOf(x.time)} · {x.customer} · {PAYMENT_LABELS[x.payment_method] || x.payment_method}{x.sold_by ? ` · ${x.sold_by}` : ''}
+                      {timeOf(x.time)} · {x.customer === 'Walk-in' ? t('Walk-in') : x.customer} · {t(PAYMENT_LABELS[x.payment_method] || x.payment_method)}{x.sold_by ? ` · ${x.sold_by}` : ''}
                     </Text>
                   </View>
                   <View style={styles.rowEnd}>
@@ -191,19 +193,19 @@ function ReportContent({ date, setDate }: { date: string; setDate: (d: string) =
               )))}
 
             {tab === 'repairs' && (data.repairs.length === 0
-              ? <EmptyState emoji="🔧" title="No repairs" message={isToday ? 'Repairs finished or handed over today will appear here.' : 'No repairs finished on this day.'} />
+              ? <EmptyState emoji="🔧" title={t('No repairs')} message={isToday ? t('Repairs finished or handed over today will appear here.') : t('No repairs finished on this day.')} />
               : data.repairs.map(x => (
                 <View key={x.id} style={[styles.row, shadow.sm]}>
                   <View style={styles.rowBody}>
                     <Text style={styles.rowTitle} numberOfLines={1}>{x.device_name}</Text>
                     <Text style={styles.rowMeta} numberOfLines={1}>
-                      {x.ticket_number} · {x.customer_name || 'No name'}{x.technician_name ? ` · ${x.technician_name}` : ''}
+                      {x.ticket_number} · {x.customer_name || t('No name')}{x.technician_name ? ` · ${x.technician_name}` : ''}
                     </Text>
                   </View>
                   <View style={styles.rowEnd}>
                     {x.delivered_today
                       ? <Text style={styles.rowAmount}>{formatBr(x.amount)}</Text>
-                      : <Badge label={STATUS_LABEL[x.status] || x.status} variant="green" />}
+                      : <Badge label={t(STATUS_LABEL[x.status] || x.status)} variant="green" />}
                     {x.delivered_today && x.profit != null && (
                       <Text style={[styles.rowProfit, { color: x.profit >= 0 ? colors.greenDark : colors.redDark }]}>+{formatBr(x.profit)}</Text>
                     )}
@@ -212,7 +214,7 @@ function ReportContent({ date, setDate }: { date: string; setDate: (d: string) =
               )))}
 
             {tab === 'bought' && (data.purchases.length === 0
-              ? <EmptyState emoji="📦" title="No stock bought" message={isToday ? 'Stock you add or restock today will appear here.' : 'No purchases on this day.'} />
+              ? <EmptyState emoji="📦" title={t('No stock bought')} message={isToday ? t('Stock you add or restock today will appear here.') : t('No purchases on this day.')} />
               : data.purchases.map(x => (
                 <View key={x.id} style={[styles.row, shadow.sm]}>
                   <View style={styles.rowBody}>
@@ -230,9 +232,9 @@ function ReportContent({ date, setDate }: { date: string; setDate: (d: string) =
 
       {/* Export */}
       <View style={styles.footer}>
-        <Button title="PDF" icon="📄" variant="secondary" onPress={() => openExport('pdf')} loading={exporting === 'pdf'} disabled={!data} style={styles.footBtn} />
-        <Button title="Image" icon="🖼️" variant="secondary" onPress={() => openExport('image')} loading={exporting === 'image'} disabled={!data} style={styles.footBtn} />
-        <Button title="Share" icon="📤" onPress={shareText} disabled={!data} style={styles.footBtn} />
+        <Button title={t('PDF')} icon="📄" variant="secondary" onPress={() => openExport('pdf')} loading={exporting === 'pdf'} disabled={!data} style={styles.footBtn} />
+        <Button title={t('Image')} icon="🖼️" variant="secondary" onPress={() => openExport('image')} loading={exporting === 'image'} disabled={!data} style={styles.footBtn} />
+        <Button title={t('Share')} icon="📤" onPress={shareText} disabled={!data} style={styles.footBtn} />
       </View>
     </SafeAreaView>
   );

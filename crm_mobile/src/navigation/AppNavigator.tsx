@@ -13,6 +13,7 @@ import MainTabs from './MainTabs';
 import ReportScreen from '../screens/ReportScreen';
 import TeamScreen from '../screens/TeamScreen';
 import OrdersScreen from '../screens/OrdersScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 
 const Stack = createStackNavigator();
 
@@ -46,10 +47,11 @@ export default function AppNavigator() {
         {isAuthenticated ? (
           <>
             <Stack.Screen name="Main" component={MainTabs} options={TransitionPresets.FadeFromBottomAndroid} />
-            {/* Owner-only pages, opened from Home and the Account menu */}
+            {/* Pages opened from Home: reports, team and orders for the owner, the profile for everyone */}
             <Stack.Screen name="Report" component={ReportScreen} />
             <Stack.Screen name="Team" component={TeamScreen} />
             <Stack.Screen name="Orders" component={OrdersScreen} />
+            <Stack.Screen name="Profile" component={ProfileScreen} />
           </>
         ) : (
           <Stack.Screen name="Login" component={LoginScreen} options={TransitionPresets.FadeFromBottomAndroid} />

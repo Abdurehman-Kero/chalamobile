@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { useFormScroll } from './FormModal';
+import { useT } from '../i18n';
 import { colors, radius, spacing } from '../theme';
 
 interface Props {
@@ -10,7 +11,9 @@ interface Props {
   style?: ViewStyle;
 }
 
-export const SearchBar: React.FC<Props> = ({ value, onChangeText, placeholder = 'Search…', style }) => {
+export const SearchBar: React.FC<Props> = ({ value, onChangeText, placeholder, style }) => {
+  const t = useT();
+  placeholder = placeholder ?? t('Search…');
   const wrapRef = useRef<any>(null);
   const formScroll = useFormScroll();
   return (
@@ -31,7 +34,7 @@ export const SearchBar: React.FC<Props> = ({ value, onChangeText, placeholder = 
       <TouchableOpacity
         onPress={() => onChangeText('')}
         hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-        accessibilityLabel="Clear search"
+        accessibilityLabel={t('Clear search')}
       >
         <Text style={styles.clear}>✕</Text>
       </TouchableOpacity>

@@ -30,6 +30,7 @@ import { ProductPhotos, ProductPhotosHandle } from '../components/ProductPhotos'
 import { TopLoader } from '../components/TopLoader';
 import { FadeInView, rowDelay } from '../components/FadeInView';
 import { formatBr } from '../utils/formatCurrency';
+import { tr, useT } from '../i18n';
 import { colors, tones, spacing, radius, shadow, layout } from '../theme';
 
 const LOW = 'low';
@@ -50,9 +51,9 @@ const numeric = (v: string) => v.replace(/[^0-9.]/g, '');
 const wholeNumber = (v: string) => v.replace(/[^0-9]/g, '');
 
 function stockStatus(stock: number, lowAt: number): { label: string; tone: 'green' | 'amber' | 'red' } {
-  if (stock <= 0) return { label: 'Out of stock', tone: 'red' };
-  if (stock <= lowAt) return { label: `Low · ${stock} left`, tone: 'amber' };
-  return { label: `${stock} in stock`, tone: 'green' };
+  if (stock <= 0) return { label: tr('Out of stock'), tone: 'red' };
+  if (stock <= lowAt) return { label: tr('Low · {n} left', { n: stock }), tone: 'amber' };
+  return { label: tr('{n} in stock', { n: stock }), tone: 'green' };
 }
 
 // Distinct values with how many products use each, most used first.
@@ -63,6 +64,7 @@ function tally(values: (string | null)[]): [string, number][] {
 }
 
 export default function InventoryScreen() {
+  const t = useT();
   const navigation: any = useNavigation();
   const route: any = useRoute();
 
@@ -96,7 +98,7 @@ export default function InventoryScreen() {
   const saveRestock = async () => {
     const qty = Number(rQty);
     if (!restockFor) return;
-    if (!Number.isInteger(qty) || qty < 1) { setRError('Enter how many you bought'); return; }
+    if (!Number.isInteger(qty) || qty < 1) { setRError(t('Enter how many you bought')); return; }
     setRestocking(true);
     try {
       const out = await offline.restockProduct(restockFor.id, {
@@ -104,11 +106,11 @@ export default function InventoryScreen() {
         unit_cost: rCost ? Number(rCost) : undefined,
         supplier: rSupplier.trim() || undefined,
       }, restockFor.name);
-      toast.success(offline.savedMessage(out, `Added ${qty} to ${restockFor.name}`));
+      toast.success(offline.savedMessage(out, t('Added {qty} to {name}', { qty, name: restockFor.name })));
       setRestockFor(null);
       reload();
     } catch (err) {
-      toast.error(getErrorMessage(err, 'Could not restock'));
+      toast.error(getErrorMessage(err, t('Could not restock')));
     } finally {
       setRestocking(false);
     }
@@ -149,8 +151,8 @@ export default function InventoryScreen() {
   }, [route.params?.openAdd, route.params?.filter, openAdd, navigation, canManageStock]);
 
   const chips: ChipItem[] = [
-    { key: ALL, label: 'All', count: products.length },
-    ...(lowCount > 0 ? [{ key: LOW, label: '⚠️ Low stock', count: lowCount }] : []),
+    { key: ALL, label: t('All'), count: products.length },
+    ...(lowCount > 0 ? [{ key: LOW, label: `⚠️ ${t('Low stock')}`, count: lowCount }] : []),
     ...brands.map(([b, n]) => ({ key: BRAND + b, label: b, count: n })),
     ...categories.map(([c, n]) => ({ key: CAT + c, label: c, count: n })),
   ];
@@ -170,9 +172,9 @@ export default function InventoryScreen() {
 
   const validate = () => {
     const e: Partial<Record<keyof Form, string>> = {};
-    if (!form.name.trim()) e.name = 'Enter the product name';
-    if (!form.sellingPrice || isNaN(Number(form.sellingPrice))) e.sellingPrice = 'Enter a selling price';
-    if (form.costPrice && isNaN(Number(form.costPrice))) e.costPrice = 'Not a valid price';
+    if (!form.name.trim()) e.name = t('Enter the product name');
+    if (!form.sellingPrice || isNaN(Number(form.sellingPrice))) e.sellingPrice = t('Enter a selling price');
+    if (form.costPrice && isNaN(Number(form.costPrice))) e.costPrice = t('Not a valid price');
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -194,20 +196,20 @@ export default function InventoryScreen() {
       };
       const out = editing ? await offline.updateProduct(editing.id, payload) : await offline.createProduct(payload);
       setFormOpen(false);
-      toast.success(offline.savedMessage(out, editing ? 'Product updated' : 'Product added'));
+      toast.success(offline.savedMessage(out, editing ? t('Product updated') : t('Product added')));
       // Photos picked for a new product are sent now that it exists on the server.
       if (!editing && !out.queued && out.data?.id != null && !isLocalId(out.data.id)) {
         try {
           await photosRef.current?.uploadStaged(out.data.id);
         } catch (err) {
-          toast.error(getErrorMessage(err, 'Product saved, but its photos could not be uploaded. Open it to add them again.'));
+          toast.error(getErrorMessage(err, t('Product saved, but its photos could not be uploaded. Open it to add them again.')));
         }
       } else if (!editing && out.queued) {
-        toast.info('Saved on this phone. Add photos once it has synced.');
+        toast.info(t('Saved on this phone. Add photos once it has synced.'));
       }
       reload();
     } catch (err) {
-      toast.error(getErrorMessage(err, 'Could not save the product'));
+      toast.error(getErrorMessage(err, t('Could not save the product')));
     } finally {
       setSaving(false);
     }
@@ -216,20 +218,20 @@ export default function InventoryScreen() {
   const confirmRemove = () => {
     if (!editing) return;
     Alert.alert(
-      'Remove this product?',
-      `${editing.name} will be hidden from stock and sales. Past sales stay in your records.`,
+      t('Remove this product?'),
+      t('{name} will be hidden from stock and sales. Past sales stay in your records.', { name: editing.name }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('Cancel'), style: 'cancel' },
         {
-          text: 'Remove', style: 'destructive',
+          text: t('Remove'), style: 'destructive',
           onPress: async () => {
             try {
               const out = await offline.deleteProduct(editing.id, editing.name);
               setFormOpen(false);
-              toast.success(offline.savedMessage(out, 'Product removed'));
+              toast.success(offline.savedMessage(out, t('Product removed')));
               reload();
             } catch (err) {
-              toast.error(getErrorMessage(err, 'Could not remove the product'));
+              toast.error(getErrorMessage(err, t('Could not remove the product')));
             }
           },
         },
@@ -259,10 +261,10 @@ export default function InventoryScreen() {
         </View>
         <View style={styles.rowEnd}>
           <Text style={styles.price}>{formatBr(item.selling_price)}</Text>
-          {!item.is_published && <Text style={styles.draft}>Not on web</Text>}
-          {item.is_published && !item.primary_image && !isLocalId(item.id) && <Text style={styles.noPhoto}>No photo yet</Text>}
+          {!item.is_published && <Text style={styles.draft}>{t('Not on web')}</Text>}
+          {item.is_published && !item.primary_image && !isLocalId(item.id) && <Text style={styles.noPhoto}>{t('No photo yet')}</Text>}
           {canManageStock && item.stock <= lowAt && (
-            <Button title="Restock" size="sm" variant="secondary" onPress={() => openRestock(item)} style={styles.restockBtn} />
+            <Button title={t('Restock')} size="sm" variant="secondary" onPress={() => openRestock(item)} style={styles.restockBtn} />
           )}
         </View>
       </TouchableOpacity>
@@ -271,25 +273,25 @@ export default function InventoryScreen() {
   };
 
   const emptyList = loading && !data ? (
-    <LoadingState label="Loading stock…" />
+    <LoadingState label={t('Loading stock…')} />
   ) : error && !data ? (
-    <EmptyState emoji="📡" title="Can't load stock" message={error} actionLabel="Try again" onAction={reload} />
+    <EmptyState emoji="📡" title={t("Can't load stock")} message={error} actionLabel={t('Try again')} onAction={reload} />
   ) : products.length === 0 ? (
-    <EmptyState emoji="📦" title="No products yet" message={canManageStock ? 'Add your first product to start tracking stock.' : 'The owner has not added any products yet.'} actionLabel={canManageStock ? 'Add product' : undefined} onAction={canManageStock ? openAdd : undefined} />
+    <EmptyState emoji="📦" title={t('No products yet')} message={canManageStock ? t('Add your first product to start tracking stock.') : t('The owner has not added any products yet.')} actionLabel={canManageStock ? t('Add product') : undefined} onAction={canManageStock ? openAdd : undefined} />
   ) : (
-    <EmptyState emoji="🔍" title="No matches" message="Try a different search or filter." actionLabel="Clear filters" onAction={() => { setSearch(''); setFilter(ALL); }} />
+    <EmptyState emoji="🔍" title={t('No matches')} message={t('Try a different search or filter.')} actionLabel={t('Clear filters')} onAction={() => { setSearch(''); setFilter(ALL); }} />
   );
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <OfflineBanner />
       <ScreenHeader
-        title="Stock"
-        subtitle={data ? `${products.length} products${lowCount ? ` · ${lowCount} low` : ''}` : undefined}
-        right={canManageStock ? <Button title="+ Add" size="sm" onPress={openAdd} /> : undefined}
+        title={t('Stock')}
+        subtitle={data ? `${t('{n} products', { n: products.length })}${lowCount ? ` · ${t('{n} low', { n: lowCount })}` : ''}` : undefined}
+        right={canManageStock ? <Button title={t('+ Add')} size="sm" onPress={openAdd} /> : undefined}
       />
       <View style={styles.searchWrap}>
-        <SearchBar value={search} onChangeText={setSearch} placeholder="Search name, brand or specs" />
+        <SearchBar value={search} onChangeText={setSearch} placeholder={t('Search name, brand or specs')} />
       </View>
       <ChipRow items={chips} selected={filter} onSelect={setFilter} />
       <TopLoader active={fetching && !!data} />
@@ -302,36 +304,36 @@ export default function InventoryScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[colors.red]} />}
-        ListHeaderComponent={error && data ? <InlineNotice message="Couldn't refresh. Showing saved stock." onRetry={reload} /> : undefined}
+        ListHeaderComponent={error && data ? <InlineNotice message={t("Couldn't refresh. Showing saved stock.")} onRetry={reload} /> : undefined}
         ListEmptyComponent={emptyList}
       />
 
       <FormModal
         visible={formOpen}
         onClose={() => setFormOpen(false)}
-        title={editing ? 'Edit product' : 'New product'}
-        subtitle={editing ? editing.name : 'Add an item to your stock'}
+        title={editing ? t('Edit product') : t('New product')}
+        subtitle={editing ? editing.name : t('Add an item to your stock')}
         footer={
           <View>
-            <Button title={editing ? 'Save changes' : 'Add product'} onPress={save} loading={saving} />
-            {editing && <Button title="Remove product" variant="ghost" size="sm" onPress={confirmRemove} style={styles.removeBtn} />}
+            <Button title={editing ? t('Save changes') : t('Add product')} onPress={save} loading={saving} />
+            {editing && <Button title={t('Remove product')} variant="ghost" size="sm" onPress={confirmRemove} style={styles.removeBtn} />}
           </View>
         }
       >
-        <FormInput label="Product name *" value={form.name} onChangeText={v => set('name', v)} placeholder="e.g. Samsung A26 5G" error={errors.name} />
+        <FormInput label={t('Product name *')} value={form.name} onChangeText={v => set('name', v)} placeholder={t('e.g. Samsung A26 5G')} error={errors.name} />
 
-        <OptionPicker label="Category" options={categories.map(c => c[0])} value={form.category} onChange={v => set('category', v)} />
-        <OptionPicker label="Brand" options={brands.map(b => b[0])} value={form.brand} onChange={v => set('brand', v)} />
+        <OptionPicker label={t('Category')} options={categories.map(c => c[0])} value={form.category} onChange={v => set('category', v)} />
+        <OptionPicker label={t('Brand')} options={brands.map(b => b[0])} value={form.brand} onChange={v => set('brand', v)} />
 
-        <FormInput label="Specs" value={form.specs} onChangeText={v => set('specs', v)} placeholder="e.g. 128+4GB" />
+        <FormInput label={t('Specs')} value={form.specs} onChangeText={v => set('specs', v)} placeholder={t('e.g. 128+4GB')} />
 
         <View style={styles.twoCol}>
           <FormInput
-            label="Selling price (Br) *" value={form.sellingPrice} onChangeText={v => set('sellingPrice', numeric(v))}
+            label={t('Selling price (Br) *')} value={form.sellingPrice} onChangeText={v => set('sellingPrice', numeric(v))}
             keyboardType="numeric" placeholder="15000" error={errors.sellingPrice} containerStyle={styles.colLeft}
           />
           <FormInput
-            label="Cost price (Br)" value={form.costPrice} onChangeText={v => set('costPrice', numeric(v))}
+            label={t('Cost price (Br)')} value={form.costPrice} onChangeText={v => set('costPrice', numeric(v))}
             keyboardType="numeric" placeholder="12000" error={errors.costPrice} containerStyle={styles.colRight}
           />
         </View>
@@ -339,21 +341,21 @@ export default function InventoryScreen() {
         {profit !== null && (
           <View style={[styles.profit, { backgroundColor: profit >= 0 ? tones.green.bg : tones.red.bg, borderColor: profit >= 0 ? tones.green.border : tones.red.border }]}>
             <Text style={[styles.profitText, { color: profit >= 0 ? tones.green.fg : tones.red.fg }]}>
-              {profit >= 0 ? 'Profit per item: ' : 'Loss per item: '}{formatBr(Math.abs(profit))}
+              {profit >= 0 ? t('Profit per item: ') : t('Loss per item: ')}{formatBr(Math.abs(profit))}
             </Text>
           </View>
         )}
 
-        <Text style={styles.selectorLabel}>STOCK QUANTITY</Text>
+        <Text style={styles.selectorLabel}>{t('STOCK QUANTITY')}</Text>
         <View style={styles.stepper}>
-          <TouchableOpacity style={styles.stepBtn} onPress={() => adjustStock(-1)} accessibilityLabel="Decrease stock" hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
+          <TouchableOpacity style={styles.stepBtn} onPress={() => adjustStock(-1)} accessibilityLabel={t('Decrease stock')} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
             <Text style={styles.stepText}>−</Text>
           </TouchableOpacity>
           <FormInput
             value={form.stock} onChangeText={v => set('stock', wholeNumber(v))} keyboardType="numeric" placeholder="0"
-            accessibilityLabel="Stock quantity" containerStyle={styles.stepInput} style={styles.stepInputText}
+            accessibilityLabel={t('Stock quantity')} containerStyle={styles.stepInput} style={styles.stepInputText}
           />
-          <TouchableOpacity style={styles.stepBtn} onPress={() => adjustStock(1)} accessibilityLabel="Increase stock" hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
+          <TouchableOpacity style={styles.stepBtn} onPress={() => adjustStock(1)} accessibilityLabel={t('Increase stock')} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
             <Text style={styles.stepText}>+</Text>
           </TouchableOpacity>
         </View>
@@ -364,12 +366,12 @@ export default function InventoryScreen() {
           canUploadNow={!editing || !isLocalId(editing.id)}
         />
 
-        <FormInput label="Notes" value={form.notes} onChangeText={v => set('notes', v)} placeholder="Supplier, shelf, colour…" />
+        <FormInput label={t('Notes')} value={form.notes} onChangeText={v => set('notes', v)} placeholder={t('Supplier, shelf, colour…')} />
 
         <View style={styles.publishBox}>
           <View style={styles.publishText}>
-            <Text style={styles.publishTitle}>🌐 Show on web store</Text>
-            <Text style={styles.publishSub}>Visible to customers online. Shop sales don't depend on this.</Text>
+            <Text style={styles.publishTitle}>🌐 {t('Show on web store')}</Text>
+            <Text style={styles.publishSub}>{t("Visible to customers online. Shop sales don't depend on this.")}</Text>
           </View>
           <Switch value={form.published} onValueChange={v => set('published', v)} trackColor={{ false: colors.border2, true: colors.green }} thumbColor={colors.white} />
         </View>
@@ -378,22 +380,22 @@ export default function InventoryScreen() {
       <FormModal
         visible={!!restockFor}
         onClose={() => setRestockFor(null)}
-        title="Restock"
-        subtitle={restockFor ? `${restockFor.name} · ${restockFor.stock} in stock now` : undefined}
-        footer={<Button title="Add to stock" onPress={saveRestock} loading={restocking} />}
+        title={t('Restock')}
+        subtitle={restockFor ? `${restockFor.name} · ${t('{n} in stock now', { n: restockFor.stock })}` : undefined}
+        footer={<Button title={t('Add to stock')} onPress={saveRestock} loading={restocking} />}
       >
         <FormInput
-          label="How many did you buy? *" value={rQty} onChangeText={v => { setRQty(wholeNumber(v)); setRError(undefined); }}
-          keyboardType="numeric" placeholder="e.g. 10" error={rError}
+          label={t('How many did you buy? *')} value={rQty} onChangeText={v => { setRQty(wholeNumber(v)); setRError(undefined); }}
+          keyboardType="numeric" placeholder={t('e.g. 10')} error={rError}
         />
         <FormInput
-          label="Cost per item (Br)" value={rCost} onChangeText={v => setRCost(numeric(v))} keyboardType="numeric" placeholder="12000"
-          helperText="Recorded as today's purchase and used to work out your profit."
+          label={t('Cost per item (Br)')} value={rCost} onChangeText={v => setRCost(numeric(v))} keyboardType="numeric" placeholder="12000"
+          helperText={t("Recorded as today's purchase and used to work out your profit.")}
         />
-        <FormInput label="Supplier (optional)" value={rSupplier} onChangeText={setRSupplier} placeholder="Who you bought it from" autoCapitalize="words" />
+        <FormInput label={t('Supplier (optional)')} value={rSupplier} onChangeText={setRSupplier} placeholder={t('Who you bought it from')} autoCapitalize="words" />
         {rQty && Number(rQty) > 0 && rCost ? (
           <View style={styles.restockTotal}>
-            <Text style={styles.restockTotalLabel}>Total spent</Text>
+            <Text style={styles.restockTotalLabel}>{t('Total spent')}</Text>
             <Text style={styles.restockTotalValue}>{formatBr(Number(rQty) * Number(rCost))}</Text>
           </View>
         ) : null}

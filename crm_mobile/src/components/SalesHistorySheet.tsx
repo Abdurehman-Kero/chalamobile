@@ -7,9 +7,10 @@ import * as salesApi from '../api/sales';
 import { getErrorMessage } from '../api/errors';
 import { formatBr } from '../utils/formatCurrency';
 import { timeAgo } from '../utils/formatDate';
+import { tx, useT } from '../i18n';
 import { colors, spacing } from '../theme';
 
-export const PAYMENT_LABELS: Record<string, string> = { cash: 'Cash', telebirr: 'Telebirr', cbe: 'CBE' };
+export const PAYMENT_LABELS: Record<string, string> = { cash: tx('Cash'), telebirr: 'Telebirr', cbe: 'CBE' };
 
 interface Props {
   visible: boolean;
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export const SalesHistorySheet: React.FC<Props> = ({ visible, onClose }) => {
+  const t = useT();
   const [sales, setSales] = useState<salesApi.Sale[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,18 +31,18 @@ export const SalesHistorySheet: React.FC<Props> = ({ visible, onClose }) => {
   useEffect(() => { if (visible) load(); }, [visible, load]);
 
   return (
-    <CenterModal visible={visible} onClose={onClose} title="Recent sales">
+    <CenterModal visible={visible} onClose={onClose} title={t('Recent sales')}>
       {error && <InlineNotice message={error} onRetry={load} />}
       {!sales && !error && <ActivityIndicator color={colors.red} style={{ marginVertical: spacing['3xl'] }} />}
       {sales && sales.length === 0 && (
-        <EmptyState emoji="🧾" title="No sales yet" message="Completed sales will be listed here." />
+        <EmptyState emoji="🧾" title={t('No sales yet')} message={t('Completed sales will be listed here.')} />
       )}
       {sales?.map((s, i) => (
         <View key={s.id} style={[styles.row, i === sales.length - 1 && styles.rowLast]}>
           <View style={{ flex: 1, marginRight: spacing.md }}>
-            <Text style={styles.summary} numberOfLines={2}>{s.summary || 'Sale'}</Text>
+            <Text style={styles.summary} numberOfLines={2}>{s.summary || t('Sale')}</Text>
             <Text style={styles.meta} numberOfLines={1}>
-              {s.customer_name || 'Walk-in'} · {PAYMENT_LABELS[s.payment_method] || s.payment_method} · {timeAgo(s.created_at)}
+              {s.customer_name || t('Walk-in')} · {t(PAYMENT_LABELS[s.payment_method] || s.payment_method)} · {timeAgo(s.created_at)}
             </Text>
           </View>
           <Text style={styles.amount}>{formatBr(s.total)}</Text>

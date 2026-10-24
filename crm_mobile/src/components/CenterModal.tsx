@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, Easing, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaProvider, initialWindowMetrics, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useT } from '../i18n';
 import { colors, radius, shadow, spacing } from '../theme';
 
 interface Props {
@@ -15,6 +16,7 @@ interface Props {
 const SCREEN_H = Dimensions.get('window').height;
 
 function Dialog({ onClose, title, children, footer }: Omit<Props, 'visible'>) {
+  const t = useT();
   const insets = useSafeAreaInsets();
   // The card scales up from slightly smaller as it fades in.
   const pop = useRef(new Animated.Value(0)).current;
@@ -23,7 +25,7 @@ function Dialog({ onClose, title, children, footer }: Omit<Props, 'visible'>) {
   }, [pop]);
   return (
     <View style={[styles.root, { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.lg }]}>
-      <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onClose} accessibilityLabel="Close" />
+      <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onClose} accessibilityLabel={t('Close')} />
       <Animated.View
         style={[
           styles.card, shadow.md, { maxHeight: SCREEN_H * 0.82 },
@@ -37,7 +39,7 @@ function Dialog({ onClose, title, children, footer }: Omit<Props, 'visible'>) {
             style={styles.close}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             accessibilityRole="button"
-            accessibilityLabel="Close"
+            accessibilityLabel={t('Close')}
           >
             <Text style={styles.closeIcon}>✕</Text>
           </TouchableOpacity>

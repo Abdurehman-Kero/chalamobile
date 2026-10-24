@@ -1,3 +1,15 @@
+jest.mock('@react-native-async-storage/async-storage', () => {
+  const mem: Record<string, string> = {};
+  return {
+    __esModule: true,
+    default: {
+      getItem: async (k: string) => mem[k] ?? null,
+      setItem: async (k: string, v: string) => { mem[k] = v; },
+    },
+  };
+});
+
+import { useLang, translate } from '../src/i18n';
 import { useCartStore } from '../src/store/cartStore';
 import { formatBr, formatBrCompact } from '../src/utils/formatCurrency';
 import { getErrorMessage } from '../src/api/errors';
@@ -92,5 +104,30 @@ describe('calendar days', () => {
 
   it('todayYmd matches the local calendar day', () => {
     expect(todayYmd()).toBe(toYmd(new Date()));
+  });
+});
+
+describe('languages', () => {
+  afterEach(() => useLang.getState().setLang('en'));
+
+  it('shows English text as written and fills in the {parts}', () => {
+    expect(translate('en', 'Save changes')).toBe('Save changes');
+    expect(translate('en', '{n} products', { n: 3 })).toBe('3 products');
+  });
+
+  it('translates into Afaan Oromoo and Amharic, keeping the {parts}', () => {
+    expect(translate('om', 'Sign in')).toBe('Seeni');
+    expect(translate('am', '{n} products', { n: 3 })).toBe('3 ምርቶች');
+  });
+
+  it('falls back to English for a text that has no translation yet', () => {
+    expect(translate('om', 'A line nobody has translated')).toBe('A line nobody has translated');
+  });
+
+  it('writes day names and relative days in the chosen language', () => {
+    useLang.getState().setLang('om');
+    expect(formatDayRelative(todayYmd())).toBe("Har'a");
+    useLang.getState().setLang('am');
+    expect(formatDayRelative(todayYmd())).toBe('ዛሬ');
   });
 });

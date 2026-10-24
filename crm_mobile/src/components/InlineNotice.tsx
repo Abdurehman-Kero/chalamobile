@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useT } from '../i18n';
 import { colors, radius, spacing } from '../theme';
 
 interface Props {
@@ -8,17 +9,20 @@ interface Props {
 }
 
 // Shown above a list when a refresh failed but older data is still on screen.
-export const InlineNotice: React.FC<Props> = ({ message, onRetry }) => (
+export const InlineNotice: React.FC<Props> = ({ message, onRetry }) => {
+  const t = useT();
+  return (
   <View style={styles.wrap} accessibilityRole="alert">
     <Text style={styles.icon}>⚠️</Text>
     <Text style={styles.text}>{message}</Text>
     {onRetry ? (
       <TouchableOpacity onPress={onRetry} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-        <Text style={styles.retry}>Retry</Text>
+        <Text style={styles.retry}>{t('Retry')}</Text>
       </TouchableOpacity>
     ) : null}
   </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
   wrap: {

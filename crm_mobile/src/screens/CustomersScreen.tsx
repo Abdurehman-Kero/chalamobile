@@ -29,17 +29,19 @@ import { TopLoader } from '../components/TopLoader';
 import { FadeInView, rowDelay } from '../components/FadeInView';
 import { formatBr, formatBrCompact } from '../utils/formatCurrency';
 import { formatDate } from '../utils/formatDate';
+import { tx, useT } from '../i18n';
 import { colors, avatarColors, spacing, radius, shadow, layout } from '../theme';
 
 const avatarColor = (id: number) => avatarColors[id % avatarColors.length];
 
 const REPAIR_LABEL: Record<string, string> = {
-  received: 'Received', diagnosing: 'Diagnosing', fixing: 'Fixing', completed: 'Ready', delivered: 'Delivered',
+  received: tx('Received'), diagnosing: tx('Diagnosing'), fixing: tx('Fixing'), completed: tx('Ready'), delivered: tx('Delivered'),
 };
 
 type Filter = 'all' | 'vip' | 'top';
 
 export default function CustomersScreen() {
+  const t = useT();
   const route: any = useRoute();
   const navigation: any = useNavigation();
 
@@ -102,7 +104,7 @@ export default function CustomersScreen() {
 
   const save = async () => {
     const e: { name?: string; phone?: string } = {};
-    if (!name.trim()) e.name = 'Enter the customer’s name';
+    if (!name.trim()) e.name = t('Enter the customer’s name');
     setErrors(e);
     if (e.name) return;
     setSaving(true);
@@ -115,10 +117,10 @@ export default function CustomersScreen() {
         out = await offline.createCustomer({ name: name.trim(), phone: phone.trim() || undefined, address: address.trim() || undefined });
       }
       setFormOpen(false);
-      toast.success(offline.savedMessage(out, editing ? 'Customer updated' : 'Customer added'));
+      toast.success(offline.savedMessage(out, editing ? t('Customer updated') : t('Customer added')));
       reload();
     } catch (err: any) {
-      const msg = getErrorMessage(err, 'Could not save the customer');
+      const msg = getErrorMessage(err, t('Could not save the customer'));
       if (err?.response?.data?.code === 'DUPLICATE_PHONE') setErrors({ phone: msg });
       else toast.error(msg);
     } finally {
@@ -132,11 +134,11 @@ export default function CustomersScreen() {
       if (out.queued) toast.success(offline.savedMessage(out, ''));
       reload();
     } catch (err) {
-      toast.error(getErrorMessage(err, 'Could not update the customer'));
+      toast.error(getErrorMessage(err, t('Could not update the customer')));
     }
   };
 
-  const call = (p: string) => Linking.openURL(`tel:${p.replace(/\s+/g, '')}`).catch(() => toast.error('Could not open the phone app'));
+  const call = (p: string) => Linking.openURL(`tel:${p.replace(/\s+/g, '')}`).catch(() => toast.error(t('Could not open the phone app')));
 
   const renderItem = ({ item, index }: { item: Customer; index: number }) => (
     <FadeInView delay={rowDelay(index)}>
@@ -150,42 +152,42 @@ export default function CustomersScreen() {
           {item.is_vip && <Badge label="⭐ VIP" variant="amber" style={{ marginLeft: 8 }} />}
           {isLocalId(item.id) && <PendingBadge style={{ marginLeft: 8 }} />}
         </View>
-        <Text style={styles.phone}>{item.phone || 'No phone'}</Text>
+        <Text style={styles.phone}>{item.phone || t('No phone')}</Text>
       </View>
       <View style={{ alignItems: 'flex-end' }}>
         <Text style={styles.spent}>{formatBr(item.total_spent)}</Text>
-        <Text style={styles.buys}>{item.buy_count} {item.buy_count === 1 ? 'purchase' : 'purchases'}</Text>
+        <Text style={styles.buys}>{t(item.buy_count === 1 ? tx('{n} purchase') : tx('{n} purchases'), { n: item.buy_count })}</Text>
       </View>
     </TouchableOpacity>
     </FadeInView>
   );
 
   const emptyList = loading && !data ? (
-    <LoadingState label="Loading clients…" />
+    <LoadingState label={t('Loading clients…')} />
   ) : error && !data ? (
-    <EmptyState emoji="📡" title="Can't load clients" message={error} actionLabel="Try again" onAction={reload} />
+    <EmptyState emoji="📡" title={t("Can't load clients")} message={error} actionLabel={t('Try again')} onAction={reload} />
   ) : customers.length === 0 ? (
-    <EmptyState emoji="👥" title="No clients yet" message="Save your customers to track their purchases and repairs." actionLabel="Add client" onAction={() => openForm(null)} />
+    <EmptyState emoji="👥" title={t('No clients yet')} message={t('Save your customers to track their purchases and repairs.')} actionLabel={t('Add client')} onAction={() => openForm(null)} />
   ) : (
-    <EmptyState emoji="🔍" title="No matches" message={filter === 'vip' && !search ? 'No VIP clients yet. Open a client to mark them as VIP.' : 'Try a different search.'} />
+    <EmptyState emoji="🔍" title={t('No matches')} message={filter === 'vip' && !search ? t('No VIP clients yet. Open a client to mark them as VIP.') : t('Try a different search.')} />
   );
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <OfflineBanner />
       <ScreenHeader
-        title="Clients"
-        subtitle={data ? `${customers.length} registered` : undefined}
-        right={<Button title="+ Add" size="sm" onPress={() => openForm(null)} />}
+        title={t('Clients')}
+        subtitle={data ? t('{n} registered', { n: customers.length }) : undefined}
+        right={<Button title={t('+ Add')} size="sm" onPress={() => openForm(null)} />}
       />
       <View style={styles.searchWrap}>
-        <SearchBar value={search} onChangeText={setSearch} placeholder="Search name or phone" />
+        <SearchBar value={search} onChangeText={setSearch} placeholder={t('Search name or phone')} />
       </View>
       <ChipRow
         items={[
-          { key: 'all', label: 'All', count: customers.length },
+          { key: 'all', label: t('All'), count: customers.length },
           { key: 'vip', label: '⭐ VIP', count: stats.vip },
-          { key: 'top', label: '💰 Top spenders' },
+          { key: 'top', label: `💰 ${t('Top spenders')}` },
         ]}
         selected={filter}
         onSelect={k => setFilter(k as Filter)}
@@ -202,12 +204,12 @@ export default function CustomersScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[colors.red]} />}
         ListHeaderComponent={
           <>
-            {error && data ? <InlineNotice message="Couldn't refresh. Showing saved clients." onRetry={reload} /> : null}
+            {error && data ? <InlineNotice message={t("Couldn't refresh. Showing saved clients.")} onRetry={reload} /> : null}
             {data && customers.length > 0 && (
               <View style={styles.summary}>
-                <MetricCard icon="👥" label="Clients" value={customers.length} variant="blue" style={{ marginRight: spacing.sm }} />
+                <MetricCard icon="👥" label={t('Clients')} value={customers.length} variant="blue" style={{ marginRight: spacing.sm }} />
                 <MetricCard icon="⭐" label="VIP" value={stats.vip} variant="amber" style={{ marginRight: spacing.sm }} />
-                <MetricCard icon="💰" label="Lifetime sales" value={formatBrCompact(stats.revenue)} variant="green" />
+                <MetricCard icon="💰" label={t('Lifetime sales')} value={formatBrCompact(stats.revenue)} variant="green" />
               </View>
             )}
           </>
@@ -216,7 +218,7 @@ export default function CustomersScreen() {
       />
 
       {/* Detail */}
-      <CenterModal visible={!!selected} onClose={() => { setSelectedId(null); setDetail(null); }} title="Client">
+      <CenterModal visible={!!selected} onClose={() => { setSelectedId(null); setDetail(null); }} title={t('Client')}>
         {selected && (
           <View>
             <View style={styles.detailHead}>
@@ -224,25 +226,25 @@ export default function CustomersScreen() {
                 <Text style={[styles.avatarText, { fontSize: 28 }]}>{selected.name[0]?.toUpperCase()}</Text>
               </View>
               <Text style={styles.detailName}>{selected.name}</Text>
-              <Text style={styles.detailPhone}>{selected.phone || 'No phone number'}</Text>
+              <Text style={styles.detailPhone}>{selected.phone || t('No phone number')}</Text>
               {selected.address ? <Text style={styles.detailAddress}>📍 {selected.address}</Text> : null}
             </View>
 
             <View style={styles.detailStats}>
-              <MetricCard icon="💰" label="Total spent" value={formatBr(selected.total_spent)} variant="green" style={{ marginRight: spacing.sm }} />
-              <MetricCard icon="🛍️" label="Purchases" value={selected.buy_count} variant="blue" />
+              <MetricCard icon="💰" label={t('Total spent')} value={formatBr(selected.total_spent)} variant="green" style={{ marginRight: spacing.sm }} />
+              <MetricCard icon="🛍️" label={t('Purchases')} value={selected.buy_count} variant="blue" />
             </View>
 
             <View style={styles.actions}>
-              {selected.phone ? <Button title="Call" icon="📞" variant="secondary" onPress={() => call(selected.phone!)} style={styles.actionBtn} /> : null}
-              {canManageCustomers && <Button title="Edit" icon="✏️" variant="secondary" onPress={() => openForm(selected)} style={styles.actionBtn} />}
+              {selected.phone ? <Button title={t('Call')} icon="📞" variant="secondary" onPress={() => call(selected.phone!)} style={styles.actionBtn} /> : null}
+              {canManageCustomers && <Button title={t('Edit')} icon="✏️" variant="secondary" onPress={() => openForm(selected)} style={styles.actionBtn} />}
             </View>
 
             {canManageCustomers && (
             <View style={styles.vipRow}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.vipTitle}>⭐ VIP client</Text>
-                <Text style={styles.vipSub}>Highlight loyal customers in your list</Text>
+                <Text style={styles.vipTitle}>⭐ {t('VIP client')}</Text>
+                <Text style={styles.vipSub}>{t('Highlight loyal customers in your list')}</Text>
               </View>
               <Switch value={selected.is_vip} onValueChange={v => toggleVip(selected, v)} trackColor={{ false: colors.border2, true: colors.amber }} thumbColor={colors.white} />
             </View>
@@ -253,14 +255,14 @@ export default function CustomersScreen() {
 
             {detail && (
               <>
-                <Text style={styles.histTitle}>Purchases</Text>
+                <Text style={styles.histTitle}>{t('Purchases')}</Text>
                 {detail.sales.length === 0 ? (
-                  <Text style={styles.histEmpty}>No purchases linked to this client yet. Link them when you make a sale.</Text>
+                  <Text style={styles.histEmpty}>{t('No purchases linked to this client yet. Link them when you make a sale.')}</Text>
                 ) : detail.sales.map(s => (
                   <View key={s.id} style={styles.histRow}>
                     <View style={{ flex: 1, marginRight: spacing.md }}>
-                      <Text style={styles.histItem} numberOfLines={2}>{s.summary || 'Sale'}</Text>
-                      <Text style={styles.histMeta}>{formatDate(s.created_at)} · {PAYMENT_LABELS[s.payment_method] || s.payment_method}</Text>
+                      <Text style={styles.histItem} numberOfLines={2}>{s.summary || t('Sale')}</Text>
+                      <Text style={styles.histMeta}>{formatDate(s.created_at)} · {t(PAYMENT_LABELS[s.payment_method] || s.payment_method)}</Text>
                     </View>
                     <Text style={styles.histAmt}>{formatBr(s.total)}</Text>
                   </View>
@@ -268,14 +270,14 @@ export default function CustomersScreen() {
 
                 {detail.repairs.length > 0 && (
                   <>
-                    <Text style={[styles.histTitle, { marginTop: spacing.lg }]}>Repairs</Text>
+                    <Text style={[styles.histTitle, { marginTop: spacing.lg }]}>{t('Repairs')}</Text>
                     {detail.repairs.map(r => (
                       <View key={r.id} style={styles.histRow}>
                         <View style={{ flex: 1, marginRight: spacing.md }}>
                           <Text style={styles.histItem} numberOfLines={1}>{r.device_name}</Text>
                           <Text style={styles.histMeta}>{r.ticket_number} · {formatDate(r.received_at)}</Text>
                         </View>
-                        <Badge label={REPAIR_LABEL[r.status] || r.status} variant={r.status === 'delivered' ? 'neutral' : r.status === 'completed' ? 'green' : 'amber'} />
+                        <Badge label={t(REPAIR_LABEL[r.status] || r.status)} variant={r.status === 'delivered' ? 'neutral' : r.status === 'completed' ? 'green' : 'amber'} />
                       </View>
                     ))}
                   </>
@@ -290,13 +292,13 @@ export default function CustomersScreen() {
       <FormModal
         visible={formOpen}
         onClose={() => setFormOpen(false)}
-        title={editing ? 'Edit client' : 'Add client'}
-        subtitle={editing ? editing.name : 'Save a customer’s details'}
-        footer={<Button title={editing ? 'Save changes' : 'Add client'} onPress={save} loading={saving} />}
+        title={editing ? t('Edit client') : t('Add client')}
+        subtitle={editing ? editing.name : t('Save a customer’s details')}
+        footer={<Button title={editing ? t('Save changes') : t('Add client')} onPress={save} loading={saving} />}
       >
-        <FormInput label="Full name *" value={name} onChangeText={v => { setName(v); setErrors(e => ({ ...e, name: undefined })); }} placeholder="Ahmed Musa" autoCapitalize="words" error={errors.name} />
-        <FormInput label="Phone" value={phone} onChangeText={v => { setPhone(v); setErrors(e => ({ ...e, phone: undefined })); }} placeholder="0911 234 567" keyboardType="phone-pad" error={errors.phone} />
-        <FormInput label="Address" value={address} onChangeText={setAddress} placeholder="Addis Ababa" />
+        <FormInput label={t('Full name *')} value={name} onChangeText={v => { setName(v); setErrors(e => ({ ...e, name: undefined })); }} placeholder="Ahmed Musa" autoCapitalize="words" error={errors.name} />
+        <FormInput label={t('Phone')} value={phone} onChangeText={v => { setPhone(v); setErrors(e => ({ ...e, phone: undefined })); }} placeholder="0911 234 567" keyboardType="phone-pad" error={errors.phone} />
+        <FormInput label={t('Address')} value={address} onChangeText={setAddress} placeholder="Addis Ababa" />
       </FormModal>
     </SafeAreaView>
   );

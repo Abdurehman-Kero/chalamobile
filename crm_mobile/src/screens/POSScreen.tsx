@@ -24,18 +24,20 @@ import { ProductThumb } from '../components/ProductThumb';
 import { PAYMENT_LABELS } from '../components/SalesHistorySheet';
 import { TopLoader } from '../components/TopLoader';
 import { formatBr } from '../utils/formatCurrency';
+import { tx, useT } from '../i18n';
 import { colors, spacing, radius, shadow, layout } from '../theme';
 
 const CAT = 'cat:';
 const BRAND = 'brand:';
 
 const PAYMENTS = [
-  { key: 'cash', label: '💵 Cash' },
-  { key: 'telebirr', label: '📱 Telebirr' },
-  { key: 'cbe', label: '🏦 CBE' },
+  { key: 'cash', icon: '💵', name: tx('Cash') },
+  { key: 'telebirr', icon: '📱', name: 'Telebirr' },
+  { key: 'cbe', icon: '🏦', name: 'CBE' },
 ];
 
 export default function POSScreen() {
+  const t = useT();
   const products = useResource('products', productsApi.getProducts, overlayProducts);
   const customers = useResource('customers', customersApi.getCustomers, overlayCustomers);
 
@@ -68,11 +70,11 @@ export default function POSScreen() {
       return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
     };
     return [
-      { key: 'All', label: 'All', count: all.length },
+      { key: 'All', label: t('All'), count: all.length },
       ...tally(all.map(p => p.brand)).map(([b, n]) => ({ key: BRAND + b, label: b, count: n })),
       ...tally(all.map(p => p.category)).map(([c, n]) => ({ key: CAT + c, label: c, count: n })),
     ];
-  }, [all]);
+  }, [all, t]);
 
   // Anything with stock can be sold in the shop, whether or not it is on the web store.
   const visible = useMemo(() => {
@@ -94,7 +96,7 @@ export default function POSScreen() {
 
   const addProduct = (p: Product) => {
     const ok = addItem({ product_id: p.id, name: p.name, spec: p.specs || p.brand || '', price: p.selling_price, emoji: p.emoji, stock: p.stock });
-    if (!ok) toast.error(p.stock < 1 ? `${p.name} is out of stock` : `Only ${p.stock} of ${p.name} in stock`);
+    if (!ok) toast.error(p.stock < 1 ? t('{name} is out of stock', { name: p.name }) : t('Only {n} of {name} in stock', { n: p.stock, name: p.name }));
   };
 
   const completeSale = async () => {
@@ -103,7 +105,7 @@ export default function POSScreen() {
     try {
       const out = await offline.createSale({
         customer_id: customer?.id,
-        customer_name: customer?.name ?? 'Walk-in',
+        customer_name: customer?.name ?? 'Walk-in', // stored as typed on the receipt record
         payment_method: payment,
         items: items.map(i => ({ product_id: i.product_id, qty: i.qty, unit_price: i.price, product_name: i.name })),
       });
@@ -116,7 +118,7 @@ export default function POSScreen() {
       products.reload();
       customers.reload();
     } catch (err) {
-      toast.error(getErrorMessage(err, 'Could not complete the sale'));
+      toast.error(getErrorMessage(err, t('Could not complete the sale')));
       products.reload();
     } finally {
       setCompleting(false);
@@ -132,7 +134,7 @@ export default function POSScreen() {
         onPress={() => addProduct(item)}
         activeOpacity={0.75}
         accessibilityRole="button"
-        accessibilityLabel={`${item.name}, ${formatBr(item.selling_price)}, ${out ? 'out of stock' : `${item.stock} in stock`}`}
+        accessibilityLabel={`${item.name}, ${formatBr(item.selling_price)}, ${out ? t('Out of stock') : t('{n} in stock', { n: item.stock })}`}
       >
         <ProductThumb image={item.primary_image} emoji={item.emoji} size={56} style={styles.cardThumb} />
         <Text style={styles.cardName} numberOfLines={2}>{item.name}</Text>
@@ -140,7 +142,7 @@ export default function POSScreen() {
         <View style={styles.cardFoot}>
           <Text style={styles.cardPrice} numberOfLines={1}>{formatBr(item.selling_price)}</Text>
           <Text style={[styles.cardStock, out && { color: colors.redDark }, !out && item.stock <= lowAt && { color: colors.amberDark }]}>
-            {out ? 'Out' : `${item.stock} left`}
+            {out ? t('Out') : t('{n} left', { n: item.stock })}
           </Text>
         </View>
         {line ? (
@@ -151,17 +153,17 @@ export default function POSScreen() {
               onPress={() => decrementQty(item.id)}
               hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
               accessibilityRole="button"
-              accessibilityLabel={`Remove one ${item.name}`}
+              accessibilityLabel={t('Remove one {name}', { name: item.name })}
             >
               <Text style={styles.cardStepText}>−</Text>
             </TouchableOpacity>
-            <Text style={styles.cardQty} accessibilityLabel={`${line.qty} in the sale`}>{line.qty}</Text>
+            <Text style={styles.cardQty} accessibilityLabel={t('{n} in the sale', { n: line.qty })}>{line.qty}</Text>
             <TouchableOpacity
               style={[styles.cardStepBtn, styles.cardStepPlus]}
               onPress={() => addProduct(item)}
               hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
               accessibilityRole="button"
-              accessibilityLabel={`Add one ${item.name}`}
+              accessibilityLabel={t('Add one {name}', { name: item.name })}
             >
               <Text style={[styles.cardStepText, styles.cardStepTextPlus]}>+</Text>
             </TouchableOpacity>
@@ -172,28 +174,28 @@ export default function POSScreen() {
   };
 
   const emptyList = products.loading && !products.data ? (
-    <LoadingState label="Loading products…" />
+    <LoadingState label={t('Loading products…')} />
   ) : products.error && !products.data ? (
-    <EmptyState emoji="📡" title="Can't load products" message={products.error} actionLabel="Try again" onAction={products.reload} />
+    <EmptyState emoji="📡" title={t("Can't load products")} message={products.error} actionLabel={t('Try again')} onAction={products.reload} />
   ) : all.length === 0 ? (
-    <EmptyState emoji="📦" title="No products to sell" message="Add products in the Stock tab first." />
+    <EmptyState emoji="📦" title={t('No products to sell')} message={t('Add products in the Stock tab first.')} />
   ) : (
-    <EmptyState emoji="🔍" title="No matches" message="Try a different search or category." />
+    <EmptyState emoji="🔍" title={t('No matches')} message={t('Try a different search or category.')} />
   );
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <OfflineBanner />
       <ScreenHeader
-        title="Sell"
-        subtitle="Tap a product to add it to the sale"
+        title={t('Sell')}
+        subtitle={t('Tap a product to add it to the sale')}
         right={
           <TouchableOpacity
             style={[styles.cartBtn, cartCount > 0 && styles.cartBtnActive]}
             onPress={() => setCheckoutOpen(true)}
             disabled={cartCount === 0}
             accessibilityRole="button"
-            accessibilityLabel={`Cart, ${cartCount} items`}
+            accessibilityLabel={t('Cart, {n} items', { n: cartCount })}
           >
             <Text style={styles.cartIcon}>🛒</Text>
             <Text style={[styles.cartCount, cartCount > 0 && { color: colors.white }]}>{cartCount}</Text>
@@ -201,7 +203,7 @@ export default function POSScreen() {
         }
       />
       <View style={styles.searchWrap}>
-        <SearchBar value={search} onChangeText={setSearch} placeholder="Search products" />
+        <SearchBar value={search} onChangeText={setSearch} placeholder={t('Search products')} />
       </View>
       <ChipRow items={chips} selected={filter} onSelect={setFilter} />
       <TopLoader active={products.fetching && !!products.data} />
@@ -216,17 +218,17 @@ export default function POSScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={products.refreshing} onRefresh={products.refresh} colors={[colors.red]} />}
-        ListHeaderComponent={products.error && products.data ? <InlineNotice message="Couldn't refresh. Stock levels may be out of date." onRetry={products.reload} /> : undefined}
+        ListHeaderComponent={products.error && products.data ? <InlineNotice message={t("Couldn't refresh. Stock levels may be out of date.")} onRetry={products.reload} /> : undefined}
         ListEmptyComponent={emptyList}
       />
 
       {cartCount > 0 && (
         <View style={[styles.bar, shadow.md]}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.barCount}>{cartCount} {cartCount === 1 ? 'item' : 'items'}</Text>
+            <Text style={styles.barCount}>{t(cartCount === 1 ? tx('{n} item') : tx('{n} items'), { n: cartCount })}</Text>
             <Text style={styles.barTotal}>{formatBr(total)}</Text>
           </View>
-          <Button title="Checkout ›" onPress={() => setCheckoutOpen(true)} size="sm" />
+          <Button title={`${t('Checkout')} ›`} onPress={() => setCheckoutOpen(true)} size="sm" />
         </View>
       )}
 
@@ -234,14 +236,14 @@ export default function POSScreen() {
       <FormModal
         visible={checkoutOpen && items.length > 0}
         onClose={() => setCheckoutOpen(false)}
-        title="Checkout"
-        subtitle={`${cartCount} ${cartCount === 1 ? 'item' : 'items'}`}
-        footer={<Button title={`Complete sale · ${formatBr(total)}`} onPress={completeSale} loading={completing} />}
+        title={t('Checkout')}
+        subtitle={t(cartCount === 1 ? tx('{n} item') : tx('{n} items'), { n: cartCount })}
+        footer={<Button title={`${t('Complete sale')} · ${formatBr(total)}`} onPress={completeSale} loading={completing} />}
       >
         <View style={styles.sectionHead}>
-          <Text style={styles.sectionLabel}>ITEMS</Text>
+          <Text style={styles.sectionLabel}>{t('ITEMS')}</Text>
           <TouchableOpacity onPress={() => { clearCart(); setCheckoutOpen(false); }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <Text style={styles.clear}>Clear all</Text>
+            <Text style={styles.clear}>{t('Clear all')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -249,17 +251,17 @@ export default function POSScreen() {
           <View key={item.product_id} style={styles.line}>
             <View style={{ flex: 1, marginRight: spacing.sm }}>
               <Text style={styles.lineName} numberOfLines={2}>{item.name}</Text>
-              <Text style={styles.lineSub}>{formatBr(item.price)} each</Text>
+              <Text style={styles.lineSub}>{t('{price} each', { price: formatBr(item.price) })}</Text>
             </View>
             <View style={styles.stepper}>
-              <TouchableOpacity style={styles.stepBtn} onPress={() => decrementQty(item.product_id)} accessibilityLabel={`Remove one ${item.name}`}>
+              <TouchableOpacity style={styles.stepBtn} onPress={() => decrementQty(item.product_id)} accessibilityLabel={t('Remove one {name}', { name: item.name })}>
                 <Text style={styles.stepText}>−</Text>
               </TouchableOpacity>
               <Text style={styles.stepQty}>{item.qty}</Text>
               <TouchableOpacity
                 style={styles.stepBtn}
-                onPress={() => { if (!incrementQty(item.product_id)) toast.error(`Only ${item.stock} of ${item.name} in stock`); }}
-                accessibilityLabel={`Add one ${item.name}`}
+                onPress={() => { if (!incrementQty(item.product_id)) toast.error(t('Only {n} of {name} in stock', { n: item.stock, name: item.name })); }}
+                accessibilityLabel={t('Add one {name}', { name: item.name })}
               >
                 <Text style={styles.stepText}>+</Text>
               </TouchableOpacity>
@@ -269,23 +271,23 @@ export default function POSScreen() {
         ))}
 
         <View style={styles.totalBox}>
-          <Text style={styles.totalLabel}>Total</Text>
+          <Text style={styles.totalLabel}>{t('Total')}</Text>
           <Text style={styles.totalValue}>{formatBr(total)}</Text>
         </View>
 
-        <Text style={styles.sectionLabel}>CUSTOMER</Text>
+        <Text style={styles.sectionLabel}>{t('CUSTOMER')}</Text>
         {customer ? (
           <View style={styles.customerChip}>
             <Text style={styles.customerChipName} numberOfLines={1}>👤 {customer.name}</Text>
-            <TouchableOpacity onPress={() => setCustomer(null)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} accessibilityLabel="Remove customer">
-              <Text style={styles.clear}>Remove</Text>
+            <TouchableOpacity onPress={() => setCustomer(null)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} accessibilityLabel={t('Remove customer')}>
+              <Text style={styles.clear}>{t('Remove')}</Text>
             </TouchableOpacity>
           </View>
         ) : pickingCustomer ? (
           <View style={{ marginBottom: spacing.lg }}>
-            <SearchBar value={customerQuery} onChangeText={setCustomerQuery} placeholder="Search customer name or phone" />
+            <SearchBar value={customerQuery} onChangeText={setCustomerQuery} placeholder={t('Search customer name or phone')} />
             {customerMatches.length === 0 ? (
-              <Text style={styles.noMatch}>No customer found. Add them in the Clients tab.</Text>
+              <Text style={styles.noMatch}>{t('No customer found. Add them in the Clients tab.')}</Text>
             ) : customerMatches.map(c => (
               <TouchableOpacity
                 key={c.id}
@@ -293,20 +295,20 @@ export default function POSScreen() {
                 onPress={() => { setCustomer({ id: c.id, name: c.name }); setPickingCustomer(false); setCustomerQuery(''); }}
               >
                 <Text style={styles.matchName}>{c.name}</Text>
-                <Text style={styles.matchPhone}>{c.phone || 'No phone'}</Text>
+                <Text style={styles.matchPhone}>{c.phone || t('No phone')}</Text>
               </TouchableOpacity>
             ))}
-            <Button title="Cancel" variant="ghost" size="sm" onPress={() => setPickingCustomer(false)} style={{ alignSelf: 'flex-start', marginTop: 4 }} />
+            <Button title={t('Cancel')} variant="ghost" size="sm" onPress={() => setPickingCustomer(false)} style={{ alignSelf: 'flex-start', marginTop: 4 }} />
           </View>
         ) : (
           <TouchableOpacity style={styles.walkIn} onPress={() => setPickingCustomer(true)} accessibilityRole="button">
-            <Text style={styles.walkInText}>Walk-in customer</Text>
-            <Text style={styles.walkInLink}>Link a customer ›</Text>
+            <Text style={styles.walkInText}>{t('Walk-in customer')}</Text>
+            <Text style={styles.walkInLink}>{t('Link a customer')} ›</Text>
           </TouchableOpacity>
         )}
 
-        <Text style={styles.sectionLabel}>PAYMENT</Text>
-        <ChipRow variant="form" items={PAYMENTS} selected={payment} onSelect={setPayment} />
+        <Text style={styles.sectionLabel}>{t('PAYMENT')}</Text>
+        <ChipRow variant="form" items={PAYMENTS.map(p => ({ key: p.key, label: `${p.icon} ${t(p.name)}` }))} selected={payment} onSelect={setPayment} />
 
       </FormModal>
 
@@ -314,8 +316,8 @@ export default function POSScreen() {
       <CenterModal
         visible={!!receipt}
         onClose={() => setReceipt(null)}
-        title={receipt?.queued ? 'Sale saved offline' : 'Sale complete'}
-        footer={<Button title="New sale" variant="dark" onPress={() => setReceipt(null)} />}
+        title={receipt?.queued ? t('Sale saved offline') : t('Sale complete')}
+        footer={<Button title={t('New sale')} variant="dark" onPress={() => setReceipt(null)} />}
       >
         {receipt && (
           <View>
@@ -323,11 +325,11 @@ export default function POSScreen() {
               <View style={styles.check}><Text style={styles.checkText}>✓</Text></View>
               <Text style={styles.receiptTitle}>{formatBr(receipt.sale.total)}</Text>
               <Text style={styles.receiptSub}>
-                {PAYMENT_LABELS[receipt.sale.payment_method] || receipt.sale.payment_method} · {receipt.sale.customer_name || 'Walk-in'}
+                {t(PAYMENT_LABELS[receipt.sale.payment_method] || receipt.sale.payment_method)} · {receipt.sale.customer_name === 'Walk-in' || !receipt.sale.customer_name ? t('Walk-in') : receipt.sale.customer_name}
               </Text>
             </View>
             {receipt.queued && (
-              <Text style={styles.offlineNote}>Saved on this phone. It will be sent to the server when you’re back online.</Text>
+              <Text style={styles.offlineNote}>{t('Saved on this phone. It will be sent to the server when you’re back online.')}</Text>
             )}
             <View style={styles.receiptBox}>
               {receipt.sale.items?.map((i, idx) => (

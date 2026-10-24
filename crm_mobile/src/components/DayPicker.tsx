@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { ChipRow } from './ChipRow';
 import { addDaysYmd, formatDay, formatDayRelative, todayYmd } from '../utils/formatDate';
+import { tx, useT } from '../i18n';
 import { colors, radius, spacing } from '../theme';
 
 interface Props {
@@ -14,15 +15,16 @@ interface Props {
 }
 
 const QUICK = [
-  { key: '0', label: 'Today', days: 0 },
-  { key: '1', label: 'Tomorrow', days: 1 },
-  { key: '2', label: '+2 days', days: 2 },
-  { key: '3', label: '+3 days', days: 3 },
-  { key: '7', label: '1 week', days: 7 },
+  { key: '0', label: tx('Today'), days: 0 },
+  { key: '1', label: tx('Tomorrow'), days: 1 },
+  { key: '2', label: tx('+2 days'), days: 2 },
+  { key: '3', label: tx('+3 days'), days: 3 },
+  { key: '7', label: tx('1 week'), days: 7 },
 ];
 
 // One tap for the usual choices, and − / + to step to any other day.
 export const DayPicker: React.FC<Props> = ({ label, value, onChange, min, hint }) => {
+  const t = useT();
   const floor = min ?? todayYmd();
   const today = todayYmd();
   const canGoBack = value > floor;
@@ -39,7 +41,7 @@ export const DayPicker: React.FC<Props> = ({ label, value, onChange, min, hint }
           onPress={() => canGoBack && onChange(addDaysYmd(value, -1))}
           disabled={!canGoBack}
           accessibilityRole="button"
-          accessibilityLabel="Earlier day"
+          accessibilityLabel={t('Earlier day')}
         >
           <Text style={styles.stepText}>−</Text>
         </TouchableOpacity>
@@ -53,7 +55,7 @@ export const DayPicker: React.FC<Props> = ({ label, value, onChange, min, hint }
           style={styles.step}
           onPress={() => onChange(addDaysYmd(value, 1))}
           accessibilityRole="button"
-          accessibilityLabel="Later day"
+          accessibilityLabel={t('Later day')}
         >
           <Text style={styles.stepText}>+</Text>
         </TouchableOpacity>
@@ -61,7 +63,7 @@ export const DayPicker: React.FC<Props> = ({ label, value, onChange, min, hint }
 
       <ChipRow
         variant="form"
-        items={QUICK.map(q => ({ key: q.key, label: q.label }))}
+        items={QUICK.map(q => ({ key: q.key, label: t(q.label) }))}
         selected={quickSelected}
         onSelect={(k) => onChange(addDaysYmd(today, QUICK.find(q => q.key === k)!.days))}
       />

@@ -30,17 +30,19 @@ import { TopLoader } from '../components/TopLoader';
 import { FadeInView, rowDelay } from '../components/FadeInView';
 import { formatBr } from '../utils/formatCurrency';
 import { addDaysYmd, formatDate, formatDay, formatDayRelative, todayYmd, toYmd } from '../utils/formatDate';
+import { tr, tx, useT } from '../i18n';
+import { applyReminders } from '../reminders/useReminders';
 import { colors, Tone, spacing, radius, shadow, layout } from '../theme';
 
 const STAGE_LABEL: Record<RepairStatus, string> = {
-  received: 'Received', diagnosing: 'Diagnosing', fixing: 'Fixing', completed: 'Ready', delivered: 'Delivered',
+  received: tx('Received'), diagnosing: tx('Diagnosing'), fixing: tx('Fixing'), completed: tx('Ready'), delivered: tx('Delivered'),
 };
 const STAGE_TONE: Record<RepairStatus, Tone> = {
   received: 'blue', diagnosing: 'purple', fixing: 'amber', completed: 'green', delivered: 'neutral',
 };
 // What the button should say for moving a ticket out of each stage.
 const NEXT_ACTION: Record<RepairStatus, string> = {
-  received: 'Start diagnosing', diagnosing: 'Start repair', fixing: 'Mark as ready', completed: 'Hand over to customer', delivered: '',
+  received: tx('Start diagnosing'), diagnosing: tx('Start repair'), fixing: tx('Mark as ready'), completed: tx('Hand over to customer'), delivered: '',
 };
 
 const OPEN = 'open';
@@ -51,13 +53,14 @@ const numeric = (v: string) => v.replace(/[^0-9.]/g, '');
 function dueBadge(t: Repair): { label: string; tone: Tone } | null {
   if (t.status === 'completed' || t.status === 'delivered' || !t.promised_date) return null;
   const d = t.days_until_due ?? 0;
-  if (d < 0) return { label: `Overdue ${-d}d`, tone: 'red' };
-  if (d === 0) return { label: 'Due today', tone: 'amber' };
-  if (d === 1) return { label: 'Due tomorrow', tone: 'amber' };
-  return { label: `Due ${formatDay(t.promised_date)}`, tone: 'blue' };
+  if (d < 0) return { label: tr('Overdue {n}d', { n: -d }), tone: 'red' };
+  if (d === 0) return { label: tr('Due today'), tone: 'amber' };
+  if (d === 1) return { label: tr('Due tomorrow'), tone: 'amber' };
+  return { label: tr('Due {when}', { when: formatDay(t.promised_date) }), tone: 'blue' };
 }
 
 export default function RepairsScreen() {
+  const tt = useT();
   const route: any = useRoute();
   const navigation: any = useNavigation();
   const { isOwner } = useRole();
@@ -65,6 +68,9 @@ export default function RepairsScreen() {
   const { data, error, loading, refreshing, fetching, refresh, reload } = useResource('repairs', repairsApi.getRepairs, overlayRepairs);
   const technicians = useResource('technicians', () => (isOwner ? usersApi.getTechnicians() : Promise.resolve([])));
   const tickets = useMemo(() => data ?? [], [data]);
+
+  // Keep the alarms on this phone in step with the jobs shown here.
+  useEffect(() => { applyReminders(data); }, [data]);
 
   const [filter, setFilter] = useState<string>(OPEN);
   const [search, setSearch] = useState('');
@@ -112,8 +118,8 @@ export default function RepairsScreen() {
   }, [tickets]);
 
   const chips = [
-    { key: OPEN, label: 'Open', count: counts[OPEN] },
-    ...REPAIR_STAGES.map(s => ({ key: s, label: STAGE_LABEL[s], count: counts[s] })),
+    { key: OPEN, label: tt('Open'), count: counts[OPEN] },
+    ...REPAIR_STAGES.map(s => ({ key: s, label: tt(STAGE_LABEL[s]), count: counts[s] })),
   ];
 
   const visible = useMemo(() => {
@@ -134,11 +140,11 @@ export default function RepairsScreen() {
     try {
       const out = await offline.advanceRepair(t.id, handover, t.device_name);
       const next = REPAIR_STAGES[REPAIR_STAGES.indexOf(t.status) + 1];
-      toast.success(offline.savedMessage(out, `${t.ticket_number} is now ${STAGE_LABEL[next].toLowerCase()}`));
+      toast.success(offline.savedMessage(out, tt('{ticket} is now {stage}', { ticket: t.ticket_number, stage: tt(STAGE_LABEL[next]).toLowerCase() })));
       await reload();
       return true;
     } catch (err) {
-      toast.error(getErrorMessage(err, 'Could not update the ticket'));
+      toast.error(getErrorMessage(err, tt('Could not update the ticket')));
       return false;
     } finally {
       setAdvancingId(null);
@@ -159,7 +165,7 @@ export default function RepairsScreen() {
 
   const confirmHandover = async () => {
     if (!handoverFor) return;
-    if (amount === '' || isNaN(Number(amount))) { setAmountError('Enter the amount the customer paid'); return; }
+    if (amount === '' || isNaN(Number(amount))) { setAmountError(tt('Enter the amount the customer paid')); return; }
     setHandingOver(true);
     const ok = await runAdvance(handoverFor, { amount_collected: Number(amount), parts_cost: partsCost ? Number(partsCost) : undefined });
     setHandingOver(false);
@@ -168,8 +174,8 @@ export default function RepairsScreen() {
 
   const validate = () => {
     const e: { device?: string; issue?: string } = {};
-    if (!device.trim()) e.device = 'Enter the device name';
-    if (!issue.trim()) e.issue = 'Describe the problem';
+    if (!device.trim()) e.device = tt('Enter the device name');
+    if (!issue.trim()) e.issue = tt('Describe the problem');
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -188,10 +194,10 @@ export default function RepairsScreen() {
       });
       setNewOpen(false);
       setFilter(OPEN);
-      toast.success(offline.savedMessage(out, `Ticket ${out.data.ticket_number} created · due ${formatDayRelative(out.data.promised_date).toLowerCase()}`));
+      toast.success(offline.savedMessage(out, tt('Ticket {ticket} created · due {when}', { ticket: out.data.ticket_number, when: formatDayRelative(out.data.promised_date).toLowerCase() })));
       reload();
     } catch (err) {
-      toast.error(getErrorMessage(err, 'Could not create the ticket'));
+      toast.error(getErrorMessage(err, tt('Could not create the ticket')));
     } finally {
       setCreating(false);
     }
@@ -202,11 +208,11 @@ export default function RepairsScreen() {
     setRescheduling(true);
     try {
       const out = await offline.updateRepair(rescheduleFor.id, { promised_date: newPromised }, rescheduleFor.device_name);
-      toast.success(offline.savedMessage(out, `Promised day changed to ${formatDayRelative(newPromised).toLowerCase()}`));
+      toast.success(offline.savedMessage(out, tt('Promised day changed to {when}', { when: formatDayRelative(newPromised).toLowerCase() })));
       setRescheduleFor(null);
       reload();
     } catch (err) {
-      toast.error(getErrorMessage(err, 'Could not change the day'));
+      toast.error(getErrorMessage(err, tt('Could not change the day')));
     } finally {
       setRescheduling(false);
     }
@@ -216,15 +222,25 @@ export default function RepairsScreen() {
     try {
       const techName = technicianId ? technicians.data?.find(x => x.id === technicianId)?.name : undefined;
       const out = await offline.assignRepair(t.id, technicianId, techName, t.device_name);
-      toast.success(offline.savedMessage(out, technicianId ? 'Job assigned' : 'Job moved back to the queue'));
+      toast.success(offline.savedMessage(out, technicianId ? tt('Job assigned') : tt('Job moved back to the queue')));
       reload();
     } catch (err) {
-      toast.error(getErrorMessage(err, 'Could not assign the job'));
+      toast.error(getErrorMessage(err, tt('Could not assign the job')));
     }
   };
 
   const call = (phone: string) => {
-    Linking.openURL(`tel:${phone.replace(/\s+/g, '')}`).catch(() => toast.error('Could not open the phone app'));
+    Linking.openURL(`tel:${phone.replace(/\s+/g, '')}`).catch(() => toast.error(tt('Could not open the phone app')));
+  };
+
+  // Opens the messages app with a note for the customer, ready to send.
+  const messageCustomer = (r: Repair) => {
+    if (!r.customer_phone) return;
+    const text = r.promised_date
+      ? tt('Hello {name}, your {device} will be ready on {day}. Chala Mobile', { name: r.customer_name || '', device: r.device_name, day: formatDay(r.promised_date) })
+      : tt('Hello {name}, we are working on your {device}. Chala Mobile', { name: r.customer_name || '', device: r.device_name });
+    Linking.openURL(`sms:${r.customer_phone.replace(/\s+/g, '')}?body=${encodeURIComponent(text.replace('Hello ,', 'Hello,'))}`)
+      .catch(() => toast.error(tt('Could not open the phone app')));
   };
 
   const handoverProfit = amount !== '' && !isNaN(Number(amount)) ? Number(amount) - (partsCost ? Number(partsCost) : 0) : null;
@@ -236,23 +252,23 @@ export default function RepairsScreen() {
       <TouchableOpacity style={[styles.card, shadow.sm, item.is_overdue && styles.cardOverdue]} activeOpacity={0.8} onPress={() => setSelectedId(item.id)} accessibilityRole="button">
         <View style={styles.cardTop}>
           <View style={styles.cardBody}>
-            <Text style={styles.ticketNum}>{isLocalId(item.id) ? 'New' : item.ticket_number}  ·  Received {formatDayRelative(toYmd(new Date(item.received_at))).toLowerCase()}</Text>
+            <Text style={styles.ticketNum}>{isLocalId(item.id) ? tt('New') : item.ticket_number}  ·  {tt('Received {when}', { when: formatDayRelative(toYmd(new Date(item.received_at))).toLowerCase() })}</Text>
             <Text style={styles.deviceName} numberOfLines={1}>{item.device_name}</Text>
             <Text style={styles.issue} numberOfLines={2}>{item.issue}</Text>
           </View>
           <View style={styles.cardEnd}>
-            <Badge label={STAGE_LABEL[item.status]} variant={STAGE_TONE[item.status]} />
+            <Badge label={tt(STAGE_LABEL[item.status])} variant={STAGE_TONE[item.status]} />
             {isLocalId(item.id) ? <PendingBadge style={styles.dueBadge} /> : due && <Badge label={due.label} variant={due.tone} style={styles.dueBadge} />}
           </View>
         </View>
         <View style={styles.cardBottom}>
           <View style={styles.cardWho}>
-            <Text style={styles.customer} numberOfLines={1}>👤 {item.customer_name || 'No name'}</Text>
-            <Text style={styles.tech} numberOfLines={1}>{item.technician_name ? `🛠 ${item.technician_name}` : 'Unassigned'}</Text>
+            <Text style={styles.customer} numberOfLines={1}>👤 {item.customer_name || tt('No name')}</Text>
+            <Text style={styles.tech} numberOfLines={1}>{item.technician_name ? `🛠 ${item.technician_name}` : tt('Unassigned')}</Text>
           </View>
           {item.status !== 'delivered' && (
             <Button
-              title={NEXT_ACTION[item.status]}
+              title={tt(NEXT_ACTION[item.status])}
               size="sm"
               variant={item.status === 'completed' ? 'dark' : 'primary'}
               loading={advancingId === item.id}
@@ -266,16 +282,16 @@ export default function RepairsScreen() {
   };
 
   const emptyList = loading && !data ? (
-    <LoadingState label="Loading repairs…" />
+    <LoadingState label={tt('Loading repairs…')} />
   ) : error && !data ? (
-    <EmptyState emoji="📡" title="Can't load repairs" message={error} actionLabel="Try again" onAction={reload} />
+    <EmptyState emoji="📡" title={tt("Can't load repairs")} message={error} actionLabel={tt('Try again')} onAction={reload} />
   ) : tickets.length === 0 ? (
-    <EmptyState emoji="🔧" title="No repair tickets" message="Register a device to start tracking its repair." actionLabel="New ticket" onAction={openNew} />
+    <EmptyState emoji="🔧" title={tt('No repair tickets')} message={tt('Register a device to start tracking its repair.')} actionLabel={tt('New ticket')} onAction={openNew} />
   ) : (
     <EmptyState
       emoji={filter === OPEN ? '🎉' : '🔧'}
-      title={search ? 'No matches' : filter === OPEN ? 'No open repairs' : `Nothing ${STAGE_LABEL[filter as RepairStatus]?.toLowerCase()}`}
-      message={search ? 'Try a different search.' : undefined}
+      title={search ? tt('No matches') : filter === OPEN ? tt('No open repairs') : tt('Nothing {stage}', { stage: tt(STAGE_LABEL[filter as RepairStatus] ?? '').toLowerCase() })}
+      message={search ? tt('Try a different search.') : undefined}
     />
   );
 
@@ -283,12 +299,12 @@ export default function RepairsScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <OfflineBanner />
       <ScreenHeader
-        title="Repairs"
-        subtitle={data ? `${counts[OPEN]} open · ${counts.completed} ready to collect` : undefined}
-        right={<Button title="+ Ticket" size="sm" onPress={openNew} />}
+        title={tt('Repairs')}
+        subtitle={data ? tt('{open} open · {ready} ready to collect', { open: counts[OPEN], ready: counts.completed }) : undefined}
+        right={<Button title={tt('+ Ticket')} size="sm" onPress={openNew} />}
       />
       <View style={styles.searchWrap}>
-        <SearchBar value={search} onChangeText={setSearch} placeholder="Search ticket, device or customer" />
+        <SearchBar value={search} onChangeText={setSearch} placeholder={tt('Search ticket, device or customer')} />
       </View>
       <ChipRow items={chips} selected={filter} onSelect={setFilter} />
       <TopLoader active={fetching && !!data} />
@@ -301,7 +317,7 @@ export default function RepairsScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[colors.red]} />}
-        ListHeaderComponent={error && data ? <InlineNotice message="Couldn't refresh. Showing saved tickets." onRetry={reload} /> : undefined}
+        ListHeaderComponent={error && data ? <InlineNotice message={tt("Couldn't refresh. Showing saved tickets.")} onRetry={reload} /> : undefined}
         ListEmptyComponent={emptyList}
       />
 
@@ -313,11 +329,16 @@ export default function RepairsScreen() {
         footer={selected ? (
           <View>
             {selected.customer_phone ? (
-              <Button title={`Call ${selected.customer_name || 'customer'}`} icon="📞" variant="secondary" onPress={() => call(selected.customer_phone!)} style={styles.footGap} />
+              <>
+                <Button title={tt('Call {name}', { name: selected.customer_name || tt('customer') })} icon="📞" variant="secondary" onPress={() => call(selected.customer_phone!)} style={styles.footGap} />
+                {selected.status !== 'delivered' && (
+                  <Button title={tt('Message the customer')} icon="💬" variant="secondary" onPress={() => messageCustomer(selected)} style={styles.footGap} />
+                )}
+              </>
             ) : null}
             {selected.status !== 'delivered' && (
               <Button
-                title={NEXT_ACTION[selected.status]}
+                title={tt(NEXT_ACTION[selected.status])}
                 onPress={() => advance(selected)}
                 loading={advancingId === selected.id}
                 variant={selected.status === 'completed' ? 'dark' : 'primary'}
@@ -346,7 +367,7 @@ export default function RepairsScreen() {
                       {i < REPAIR_STAGES.length - 1 && <View style={[styles.stepLine, done && styles.stepLineOn]} />}
                     </View>
                     <View style={styles.stepBody}>
-                      <Text style={[styles.stepLabel, current && styles.stepLabelCurrent, !done && !current && styles.stepLabelIdle]}>{STAGE_LABEL[s]}</Text>
+                      <Text style={[styles.stepLabel, current && styles.stepLabelCurrent, !done && !current && styles.stepLabelIdle]}>{tt(STAGE_LABEL[s])}</Text>
                       {when && (done || current) ? <Text style={styles.stepDate}>{formatDate(when)}</Text> : null}
                     </View>
                   </View>
@@ -355,21 +376,21 @@ export default function RepairsScreen() {
             </View>
 
             <View style={styles.detailBox}>
-              <DetailRow label="Customer" value={selected.customer_name} />
-              <DetailRow label="Phone" value={selected.customer_phone} />
-              <DetailRow label="Received" value={formatDate(selected.received_at)} />
+              <DetailRow label={tt('Customer')} value={selected.customer_name} />
+              <DetailRow label={tt('Phone')} value={selected.customer_phone} />
+              <DetailRow label={tt('Received')} value={formatDate(selected.received_at)} />
               <DetailRow
-                label="Promised back"
-                value={selected.promised_date ? `${formatDayRelative(selected.promised_date)} · ${formatDay(selected.promised_date)}` : 'No day set'}
+                label={tt('Promised back')}
+                value={selected.promised_date ? `${formatDayRelative(selected.promised_date)} · ${formatDay(selected.promised_date)}` : tt('No day set')}
               />
-              <DetailRow label="Estimated cost" value={selected.estimated_cost == null ? null : formatBr(selected.estimated_cost)} />
-              {selected.actual_cost != null && <DetailRow label="Paid by customer" value={formatBr(selected.actual_cost)} />}
-              <DetailRow label="Technician" value={selected.technician_name || 'Unassigned'} last />
+              <DetailRow label={tt('Estimated cost')} value={selected.estimated_cost == null ? null : formatBr(selected.estimated_cost)} />
+              {selected.actual_cost != null && <DetailRow label={tt('Paid by customer')} value={formatBr(selected.actual_cost)} />}
+              <DetailRow label={tt('Technician')} value={selected.technician_name || tt('Unassigned')} last />
             </View>
 
             {selected.status !== 'delivered' && (
               <Button
-                title="Change promised day"
+                title={tt('Change promised day')}
                 variant="secondary"
                 size="sm"
                 onPress={() => { setNewPromised(selected.promised_date && selected.promised_date >= todayYmd() ? selected.promised_date : todayYmd()); setRescheduleFor(selected); }}
@@ -379,10 +400,10 @@ export default function RepairsScreen() {
 
             {isOwner && selected.status !== 'delivered' && (technicians.data?.length ?? 0) > 0 && (
               <View style={styles.assign}>
-                <Text style={styles.assignLabel}>ASSIGN TO</Text>
+                <Text style={styles.assignLabel}>{tt('ASSIGN TO')}</Text>
                 <ChipRow
                   variant="form"
-                  items={[{ key: 'none', label: 'Unassigned' }, ...(technicians.data ?? []).map(t => ({ key: String(t.id), label: t.name }))]}
+                  items={[{ key: 'none', label: tt('Unassigned') }, ...(technicians.data ?? []).map(t => ({ key: String(t.id), label: t.name }))]}
                   selected={selected.technician_id ? String(selected.technician_id) : 'none'}
                   onSelect={(k) => assign(selected, k === 'none' ? null : Number(k))}
                 />
@@ -396,46 +417,46 @@ export default function RepairsScreen() {
       <FormModal
         visible={newOpen}
         onClose={() => setNewOpen(false)}
-        title="New repair ticket"
-        subtitle="Register a device that was brought in"
-        footer={<Button title="Create ticket" onPress={create} loading={creating} />}
+        title={tt('New repair ticket')}
+        subtitle={tt('Register a device that was brought in')}
+        footer={<Button title={tt('Create ticket')} onPress={create} loading={creating} />}
       >
         <View style={styles.receivedBox}>
-          <Text style={styles.receivedLabel}>RECEIVED</Text>
+          <Text style={styles.receivedLabel}>{tt('RECEIVED')}</Text>
           <Text style={styles.receivedValue}>{formatDayRelative(todayYmd())} · {formatDay(todayYmd())}</Text>
-          <Text style={styles.receivedHint}>Saved automatically</Text>
+          <Text style={styles.receivedHint}>{tt('Saved automatically')}</Text>
         </View>
 
-        <FormInput label="Device *" value={device} onChangeText={v => { setDevice(v); setErrors(e => ({ ...e, device: undefined })); }} placeholder="e.g. Samsung A15" error={errors.device} />
-        <FormInput label="Problem *" value={issue} onChangeText={v => { setIssue(v); setErrors(e => ({ ...e, issue: undefined })); }} placeholder="e.g. Screen cracked, not charging…" multiline error={errors.issue} />
+        <FormInput label={tt('Device *')} value={device} onChangeText={v => { setDevice(v); setErrors(e => ({ ...e, device: undefined })); }} placeholder={tt('e.g. Samsung A15')} error={errors.device} />
+        <FormInput label={tt('Problem *')} value={issue} onChangeText={v => { setIssue(v); setErrors(e => ({ ...e, issue: undefined })); }} placeholder={tt('e.g. Screen cracked, not charging…')} multiline error={errors.issue} />
 
-        <DayPicker label="Promised back on *" value={promised} onChange={setPromised} hint="You'll get a reminder the day before." />
+        <DayPicker label={tt('Promised back on *')} value={promised} onChange={setPromised} hint={tt("You'll get a reminder the day before.")} />
 
-        <FormInput label="Customer name" value={custName} onChangeText={setCustName} placeholder="Ahmed Musa" autoCapitalize="words" />
-        <FormInput label="Customer phone" value={custPhone} onChangeText={setCustPhone} placeholder="0911 234 567" keyboardType="phone-pad" />
-        <FormInput label="Estimated cost (Br)" value={cost} onChangeText={v => setCost(numeric(v))} placeholder="2500" keyboardType="numeric" />
+        <FormInput label={tt('Customer name')} value={custName} onChangeText={setCustName} placeholder="Ahmed Musa" autoCapitalize="words" />
+        <FormInput label={tt('Customer phone')} value={custPhone} onChangeText={setCustPhone} placeholder="0911 234 567" keyboardType="phone-pad" />
+        <FormInput label={tt('Estimated cost (Br)')} value={cost} onChangeText={v => setCost(numeric(v))} placeholder="2500" keyboardType="numeric" />
       </FormModal>
 
       {/* Hand over: collect the money */}
       <FormModal
         visible={!!handoverFor}
         onClose={() => setHandoverFor(null)}
-        title="Hand over device"
-        subtitle={handoverFor ? `${handoverFor.device_name} · ${handoverFor.customer_name || 'customer'}` : undefined}
-        footer={<Button title="Confirm hand-over" variant="dark" onPress={confirmHandover} loading={handingOver} />}
+        title={tt('Hand over device')}
+        subtitle={handoverFor ? `${handoverFor.device_name} · ${handoverFor.customer_name || tt('customer')}` : undefined}
+        footer={<Button title={tt('Confirm hand-over')} variant="dark" onPress={confirmHandover} loading={handingOver} />}
       >
         <FormInput
-          label="Amount collected (Br) *" value={amount} onChangeText={v => { setAmount(numeric(v)); setAmountError(undefined); }}
+          label={tt('Amount collected (Br) *')} value={amount} onChangeText={v => { setAmount(numeric(v)); setAmountError(undefined); }}
           keyboardType="numeric" placeholder="2500" error={amountError}
-          helperText={handoverFor?.estimated_cost != null ? `The estimate was ${formatBr(handoverFor.estimated_cost)}.` : undefined}
+          helperText={handoverFor?.estimated_cost != null ? tt('The estimate was {amount}.', { amount: formatBr(handoverFor.estimated_cost) }) : undefined}
         />
         <FormInput
-          label="Parts cost (Br)" value={partsCost} onChangeText={v => setPartsCost(numeric(v))} keyboardType="numeric" placeholder="Optional"
-          helperText="What you spent on parts, so repair profit is right."
+          label={tt('Parts cost (Br)')} value={partsCost} onChangeText={v => setPartsCost(numeric(v))} keyboardType="numeric" placeholder={tt('Optional')}
+          helperText={tt('What you spent on parts, so repair profit is right.')}
         />
         {handoverProfit !== null && (
           <View style={styles.profitBox}>
-            <Text style={styles.profitLabel}>Repair profit</Text>
+            <Text style={styles.profitLabel}>{tt('Repair profit')}</Text>
             <Text style={[styles.profitValue, handoverProfit < 0 && { color: colors.redDark }]}>{formatBr(handoverProfit)}</Text>
           </View>
         )}
@@ -445,11 +466,11 @@ export default function RepairsScreen() {
       <FormModal
         visible={!!rescheduleFor}
         onClose={() => setRescheduleFor(null)}
-        title="Change promised day"
+        title={tt('Change promised day')}
         subtitle={rescheduleFor ? `${rescheduleFor.device_name} · ${rescheduleFor.ticket_number}` : undefined}
-        footer={<Button title="Save new day" onPress={saveReschedule} loading={rescheduling} />}
+        footer={<Button title={tt('Save new day')} onPress={saveReschedule} loading={rescheduling} />}
       >
-        <DayPicker label="Promised back on" value={newPromised} onChange={setNewPromised} />
+        <DayPicker label={tt('Promised back on')} value={newPromised} onChange={setNewPromised} />
       </FormModal>
     </SafeAreaView>
   );

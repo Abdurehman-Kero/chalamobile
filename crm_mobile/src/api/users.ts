@@ -10,7 +10,9 @@ export interface TeamMember {
   created_at: string;
 }
 
-export const ROLE_LABEL: Record<Role, string> = { owner: 'Admin', sales: 'Sales', technician: 'Technician' };
+import { tx } from '../i18n';
+
+export const ROLE_LABEL: Record<Role, string> = { owner: tx('Admin'), sales: tx('Sales'), technician: tx('Technician') };
 
 export const getUsers = async (): Promise<TeamMember[]> => (await api.get('/users')).data.users;
 
@@ -22,5 +24,5 @@ export const createUser = async (data: { name: string; email: string; password: 
 
 export const updateUser = async (
   id: number,
-  data: Partial<{ name: string; role: Role; is_active: boolean; password: string }>,
+  data: Partial<{ name: string; email: string; role: Role; is_active: boolean; password: string }>,
 ): Promise<TeamMember> => (await api.patch(`/users/${id}`, data)).data.user;

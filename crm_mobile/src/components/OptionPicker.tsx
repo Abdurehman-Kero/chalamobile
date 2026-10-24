@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { ChipRow } from './ChipRow';
 import { FormInput } from './FormInput';
+import { useT } from '../i18n';
 import { colors } from '../theme';
 
 interface Props {
@@ -17,6 +18,7 @@ const NEW = '__new__';
 // Pick from values that already exist, or type a new one. The list is built
 // from the database by the caller, so nothing here is hardcoded.
 export const OptionPicker: React.FC<Props> = ({ label, options, value, onChange }) => {
+  const t = useT();
   const known = useMemo(() => options.filter(Boolean), [options]);
   const isCustom = value !== '' && !known.includes(value);
   const [adding, setAdding] = useState(false);
@@ -24,7 +26,7 @@ export const OptionPicker: React.FC<Props> = ({ label, options, value, onChange 
 
   const items = [
     ...known.map(o => ({ key: o, label: o })),
-    { key: NEW, label: '+ New' },
+    { key: NEW, label: t('+ New') },
   ];
 
   return (
@@ -43,9 +45,9 @@ export const OptionPicker: React.FC<Props> = ({ label, options, value, onChange 
         <FormInput
           value={value}
           onChangeText={onChange}
-          placeholder={`Type a new ${label.toLowerCase()}`}
+          placeholder={t('Type a new {name}', { name: label.toLowerCase() })}
           autoCapitalize="words"
-          accessibilityLabel={`New ${label}`}
+          accessibilityLabel={t('New {name}', { name: label })}
         />
       )}
     </View>

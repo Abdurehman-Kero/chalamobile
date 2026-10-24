@@ -6,6 +6,9 @@ import { colors } from '../theme';
 import { useCartStore } from '../store/cartStore';
 import { useRole } from '../hooks/useRole';
 import { Role } from '../api/auth';
+import { tx, useT } from '../i18n';
+import { useRepairReminders } from '../reminders/useReminders';
+import { usePrefetch } from '../hooks/usePrefetch';
 
 import DashboardScreen from '../screens/DashboardScreen';
 import InventoryScreen from '../screens/InventoryScreen';
@@ -17,11 +20,11 @@ const Tab = createBottomTabNavigator();
 
 // Route names are used by navigate() calls elsewhere; labels are what people read.
 const ALL_TABS = [
-  { name: 'Home',    label: 'Home',    icon: '📊', screen: DashboardScreen, roles: ['owner', 'sales', 'technician'] },
-  { name: 'Stock',   label: 'Stock',   icon: '📦', screen: InventoryScreen, roles: ['owner', 'sales'] },
-  { name: 'Repair',  label: 'Repairs', icon: '🔧', screen: RepairsScreen,   roles: ['owner', 'technician'] },
-  { name: 'POS',     label: 'Sell',    icon: '💳', screen: POSScreen,       roles: ['owner', 'sales'] },
-  { name: 'Clients', label: 'Clients', icon: '👥', screen: CustomersScreen, roles: ['owner', 'sales'] },
+  { name: 'Home',    label: tx('Home'),    icon: '📊', screen: DashboardScreen, roles: ['owner', 'sales', 'technician'] },
+  { name: 'Stock',   label: tx('Stock'),   icon: '📦', screen: InventoryScreen, roles: ['owner', 'sales'] },
+  { name: 'Repair',  label: tx('Repairs'), icon: '🔧', screen: RepairsScreen,   roles: ['owner', 'technician'] },
+  { name: 'POS',     label: tx('Sell'),    icon: '💳', screen: POSScreen,       roles: ['owner', 'sales'] },
+  { name: 'Clients', label: tx('Clients'), icon: '👥', screen: CustomersScreen, roles: ['owner', 'sales'] },
 ] as const;
 
 // Owner sees everything, the sales desk sees selling, a technician sees repairs.
@@ -29,6 +32,10 @@ const tabsFor = (role: Role) => ALL_TABS.filter(t => (t.roles as readonly string
 
 export default function MainTabs() {
   const { role } = useRole();
+  // Rings the technician the day before each customer comes for a repair.
+  useRepairReminders();
+  // Loads the other tabs' lists in the background so they open instantly.
+  usePrefetch();
   const tabs = tabsFor(role);
   return (
     <Tab.Navigator
@@ -50,6 +57,7 @@ export default function MainTabs() {
 }
 
 function CustomTabBar({ state, navigation, tabs }: any) {
+  const t = useT();
   const insets = useSafeAreaInsets();
   const cartCount = useCartStore(s => s.items.reduce((n, i) => n + i.qty, 0));
 
@@ -57,7 +65,7 @@ function CustomTabBar({ state, navigation, tabs }: any) {
     <View style={[styles.tabBar, { paddingBottom: Math.max(insets.bottom, 10) }]}>
       {state.routes.map((route: any, index: number) => {
         const isFocused = state.index === index;
-        const tab = tabs.find((t: any) => t.name === route.name);
+        const tab = tabs.find((x: any) => x.name === route.name);
         if (!tab) return null;
         const badge = route.name === 'POS' && cartCount > 0 ? cartCount : 0;
 
@@ -73,7 +81,7 @@ function CustomTabBar({ state, navigation, tabs }: any) {
             onPress={onPress}
             activeOpacity={0.7}
             accessibilityRole="tab"
-            accessibilityLabel={badge ? `${tab.label}, ${badge} items in cart` : tab.label}
+            accessibilityLabel={badge ? t('{label}, {n} items in cart', { label: t(tab.label), n: badge }) : t(tab.label)}
             accessibilityState={{ selected: isFocused }}
           >
             <View style={[styles.iconPill, isFocused && styles.iconPillActive]}>
@@ -83,7 +91,7 @@ function CustomTabBar({ state, navigation, tabs }: any) {
               )}
             </View>
             <Text style={[styles.tabLabel, isFocused && styles.tabLabelActive]} numberOfLines={1}>
-              {tab.label}
+              {t(tab.label)}
             </Text>
           </TouchableOpacity>
         );

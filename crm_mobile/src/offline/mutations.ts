@@ -4,6 +4,7 @@ import { Repair } from '../api/repairs';
 import { Sale, SaleInput } from '../api/sales';
 import { submit } from './engine';
 import { Outcome } from './types';
+import { tr } from '../i18n';
 
 // Every change a screen can make. They look like the plain API calls, but they
 // are saved on the phone first and sent when there is a connection. Each returns
@@ -36,4 +37,4 @@ export const assignRepair = (id: number, technicianId: number | null, technician
 
 // The success message for a toast: the normal one, or a note that it was saved offline.
 export const savedMessage = (outcome: Outcome<any>, normal: string) =>
-  outcome.queued ? 'Saved on this phone · will sync when you’re online' : normal;
+  outcome.queued ? tr('Saved on this phone · will sync when you’re online') : normal;

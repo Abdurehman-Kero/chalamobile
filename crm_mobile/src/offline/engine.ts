@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
 import { getErrorMessage } from '../api/errors';
+import { tr } from '../i18n';
 import { useAuthStore } from '../store/authStore';
 import { useConnectivityStore } from '../store/connectivityStore';
 import { hasLocalIds, useOutboxStore } from './outboxStore';
@@ -88,8 +89,8 @@ export function processQueue(): Promise<void> {
 
         // It points at something that never reached the server, so it cannot be sent.
         if (hasLocalIds(next.payload)) {
-          useOutboxStore.getState().patch(next.id, { status: 'failed', error: 'It depends on an item that could not be saved.' });
-          rejectWaiter(next.id, new Error('It depends on an item that could not be saved.'));
+          useOutboxStore.getState().patch(next.id, { status: 'failed', error: tr('It depends on an item that could not be saved.') });
+          rejectWaiter(next.id, new Error(tr('It depends on an item that could not be saved.')));
           continue;
         }
 
@@ -170,7 +171,7 @@ async function attempt(op: Op): Promise<'synced' | 'handled' | 'stop' | 'auth'> 
       return 'stop';
     }
     // The server understood and refused it (not enough stock, missing field...).
-    const message = getErrorMessage(err, 'The server did not accept this change.');
+    const message = getErrorMessage(err, tr('The server did not accept this change.'));
     if (waiters.has(op.id)) {
       // The person is looking at the form: show the error there, as always.
       store.remove(op.id);
