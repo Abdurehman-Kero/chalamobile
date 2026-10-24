@@ -1,13 +1,10 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
-import { colors, radius, spacing } from '../theme';
+import { ActivityIndicator, Animated, Easing, StyleSheet, Text, View } from 'react-native';
+import { colors, spacing } from '../theme';
 
-const DOTS = 3;
-
-// Full-screen loader for app start: the logo breathes and three dots bounce.
+// Full-screen loader for app start: the logo breathes while a spinner turns beneath it.
 export const BrandLoader: React.FC<{ label?: string }> = ({ label = 'Getting things ready' }) => {
   const pulse = useRef(new Animated.Value(0)).current;
-  const dots = useRef(Array.from({ length: DOTS }, () => new Animated.Value(0))).current;
 
   useEffect(() => {
     const breathe = Animated.loop(
@@ -16,20 +13,9 @@ export const BrandLoader: React.FC<{ label?: string }> = ({ label = 'Getting thi
         Animated.timing(pulse, { toValue: 0, duration: 900, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
       ]),
     );
-    const bounce = Animated.loop(
-      Animated.stagger(
-        160,
-        dots.map(d => Animated.sequence([
-          Animated.timing(d, { toValue: 1, duration: 280, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-          Animated.timing(d, { toValue: 0, duration: 280, easing: Easing.in(Easing.quad), useNativeDriver: true }),
-          Animated.delay(240),
-        ])),
-      ),
-    );
     breathe.start();
-    bounce.start();
-    return () => { breathe.stop(); bounce.stop(); };
-  }, [pulse, dots]);
+    return () => breathe.stop();
+  }, [pulse]);
 
   return (
     <View style={styles.root} accessibilityRole="progressbar" accessibilityLabel={label}>
@@ -45,14 +31,7 @@ export const BrandLoader: React.FC<{ label?: string }> = ({ label = 'Getting thi
         <Text style={styles.brandMain}>CHALA</Text>
         <Text style={styles.brandAccent}>MOB</Text>
       </View>
-      <View style={styles.dots}>
-        {dots.map((d, i) => (
-          <Animated.View
-            key={i}
-            style={[styles.dot, { transform: [{ translateY: d.interpolate({ inputRange: [0, 1], outputRange: [0, -8] }) }] }]}
-          />
-        ))}
-      </View>
+      <ActivityIndicator size="large" color={colors.red} style={styles.spinner} />
       <Text style={styles.label}>{label}</Text>
     </View>
   );
@@ -65,7 +44,6 @@ const styles = StyleSheet.create({
   brandRow: { flexDirection: 'row' },
   brandMain: { fontSize: 28, fontWeight: '900', color: colors.navy, letterSpacing: 1 },
   brandAccent: { fontSize: 28, fontWeight: '900', color: colors.red, letterSpacing: 1 },
-  dots: { flexDirection: 'row', height: 22, alignItems: 'flex-end', marginTop: spacing.xl },
-  dot: { width: 10, height: 10, borderRadius: radius.full, backgroundColor: colors.red, marginHorizontal: 5 },
+  spinner: { marginTop: spacing.xl },
   label: { fontSize: 13, color: colors.text2, marginTop: spacing.md, fontWeight: '600' },
 });

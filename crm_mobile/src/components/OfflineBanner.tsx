@@ -32,7 +32,7 @@ export const OfflineBanner: React.FC = () => {
     busy = true;
   } else if (!isOnline) {
     tone = 'amber';
-    const where = deviceConnected ? 'Can’t reach the server' : 'You’re offline';
+    const where = deviceConnected ? 'Can’t connect right now' : 'You’re offline';
     message = pending > 0
       ? `${where} · ${changes(pending)} saved on this phone, will sync automatically`
       : `${where}. You can keep working; changes sync automatically later.`;

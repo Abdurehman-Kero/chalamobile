@@ -55,7 +55,7 @@ describe('currency', () => {
 
 describe('error messages', () => {
   it('explains an unreachable server', () => {
-    expect(getErrorMessage({ message: 'Network Error' })).toMatch(/Can't reach the server/);
+    expect(getErrorMessage({ message: 'Network Error' })).toMatch(/Can't connect right now/);
   });
 
   it('prefers the message sent by the server', () => {
@@ -64,7 +64,7 @@ describe('error messages', () => {
   });
 
   it('explains a timeout', () => {
-    expect(getErrorMessage({ code: 'ECONNABORTED' })).toMatch(/too long/);
+    expect(getErrorMessage({ code: 'ECONNABORTED' })).toMatch(/longer than expected/);
   });
 });
 

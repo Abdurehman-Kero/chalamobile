@@ -34,8 +34,7 @@ export default function LoginScreen() {
   const passwordRef = useRef<any>(null);
   const login = useAuthStore((s) => s.login);
 
-  // A server that was asleep can take up to a minute to answer the first request.
-  // After a few seconds of waiting, say so, so it never looks frozen.
+  // Some first sign-ins take a while. After a few seconds, say so calmly, so it never looks frozen.
   useEffect(() => {
     if (!loading) { setSlow(false); return; }
     const t = setTimeout(() => setSlow(true), 5000);
@@ -150,7 +149,7 @@ export default function LoginScreen() {
             {slow && (
               <View style={styles.wake} accessibilityLiveRegion="polite">
                 <ActivityIndicator size="small" color={colors.amberDark} />
-                <Text style={styles.wakeText}>Waking up the server. This can take up to a minute the first time.</Text>
+                <Text style={styles.wakeText}>This is taking a little longer than usual. Thanks for your patience.</Text>
               </View>
             )}
 
