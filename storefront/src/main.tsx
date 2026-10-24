@@ -12,8 +12,10 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 30_000,
       refetchOnWindowFocus: false,
-      // Retry only when the network failed (e.g. the server was waking up), not on 4xx answers.
-      retry: (count, error) => !(error as { response?: unknown }).response && count < 2,
+      // The shop server sleeps when idle and can take a minute to wake. Network failures are retried
+      // patiently (about 5 tries over ~20s, on top of the 60s wait per try); answers like 404 are not.
+      retry: (count, error) => !(error as { response?: unknown }).response && count < 5,
+      retryDelay: (attempt) => Math.min(2000 * (attempt + 1), 8000),
     },
   },
 });

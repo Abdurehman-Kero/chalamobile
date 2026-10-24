@@ -29,7 +29,7 @@ export function warmUpServer(): void {
 /** A message a customer can act on, never a raw error. */
 export function errorMessage(err: unknown, fallback = 'Something went wrong. Please try again.'): string {
   if (axios.isAxiosError(err)) {
-    if (!err.response) return 'Cannot reach the shop right now. Check your internet connection and try again.';
+    if (!err.response) return 'We could not reach the shop server. If your internet is fine, it may be waking up: please try again in a moment.';
     const message = (err.response.data as { error?: string } | undefined)?.error;
     // The shop server answered but does not have the store yet (an older version is still running).
     if (err.response.status === 404 && message === 'Route not found') {
