@@ -5,6 +5,7 @@ import { errorMessage } from '../api/client';
 import { formatBr, timeAgo } from '../lib/format';
 import { buttonClass } from '../components/ui/Button';
 import { EmptyState, ErrorState, Skeleton } from '../components/ui/States';
+import { PageHeader } from '../components/ui/PageHeader';
 import { Seo } from '../components/ui/Seo';
 import { StatusBadge } from '../components/ui/StatusBadge';
 
@@ -14,7 +15,7 @@ export default function Orders() {
   return (
     <div className="mx-auto max-w-3xl px-4 pb-10 pt-6 sm:px-6">
       <Seo title="My orders" />
-      <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">My orders</h1>
+      <PageHeader title="My orders" fallback="/" />
 
       {isPending ? (
         <div className="mt-6 space-y-3">{Array.from({ length: 3 }, (_, i) => <Skeleton key={i} className="h-28" />)}</div>

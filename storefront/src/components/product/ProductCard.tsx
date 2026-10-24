@@ -13,23 +13,67 @@ interface Props {
   showSold?: boolean;
   /** Sizes the card in a horizontal rail instead of a grid cell. */
   rail?: boolean;
+  /** A wide row (photo on the left) instead of a tall card. */
+  row?: boolean;
 }
 
 const RAIL = 'w-[46vw] max-w-[230px] shrink-0 snap-start sm:w-[210px] lg:w-[230px]';
 
-export function ProductCard({ product, showSold = false, rail = false }: Props) {
+/** Add to cart: the one amber action on a product. */
+function CartButton({ product }: { product: Product }) {
   const add = useCart(s => s.add);
   const show = useToast(s => s.show);
   const out = product.stock === 'out';
+  return (
+    <button
+      type="button"
+      onClick={() => { add(product); show(`${product.name} added to your cart`, { label: 'View cart', to: '/cart' }); }}
+      disabled={out}
+      aria-label={out ? `${product.name} is sold out` : `Add ${product.name} to cart`}
+      className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand-ink transition-colors hover:bg-brand hover:text-on-brand disabled:bg-sunken disabled:text-muted"
+    >
+      <Icon name={out ? 'x' : 'cart'} size={20} />
+    </button>
+  );
+}
 
-  const quickAdd = () => {
-    add(product);
-    show(`${product.name} added to your cart`, { label: 'View cart', to: '/cart' });
-  };
+export function ProductCard({ product, showSold = false, rail = false, row = false }: Props) {
+  const out = product.stock === 'out';
+  const badges = (
+    <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
+      {showSold && product.sold > 0 && !out && (
+        <span className="rounded-md bg-accent px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">Top selling</span>
+      )}
+      <StockBadge state={product.stock} compact />
+    </div>
+  );
+
+  if (row) {
+    return (
+      <article className="group flex min-w-0 gap-3 overflow-hidden rounded-2xl border border-line bg-surface p-3 shadow-card transition-shadow hover:shadow-pop sm:gap-5 sm:p-4">
+        <Link to={productPath(product.id)} className="relative block w-28 shrink-0 sm:w-40" aria-label={product.name}>
+          <ProductImage src={product.image} alt="" width={320} sizes="160px" className={`aspect-square w-full rounded-xl ${out ? 'opacity-60' : ''}`} />
+        </Link>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-muted">{product.brand || product.category}</p>
+          <Link to={productPath(product.id)} className="mt-0.5 line-clamp-2 text-base font-semibold leading-snug hover:underline">{product.name}</Link>
+          {product.specs && <p className="mt-0.5 truncate text-sm text-muted">{product.specs}</p>}
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <StockBadge state={product.stock} />
+            {showSold && product.sold > 0 && !out && <span className="rounded-md bg-accent px-2 py-0.5 text-[11px] font-semibold text-white">Top selling</span>}
+          </div>
+          <div className="mt-auto flex items-center justify-between gap-3 pt-3">
+            <p className="text-xl font-bold tracking-tight">{formatBr(product.price)}</p>
+            <CartButton product={product} />
+          </div>
+        </div>
+      </article>
+    );
+  }
 
   return (
     <article
-      className={`group relative flex min-w-0 flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-all duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-pop ${rail ? RAIL : ''}`}
+      className={`group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-pop ${rail ? RAIL : ''}`}
     >
       <Link to={productPath(product.id)} className="flex flex-1 flex-col" aria-label={`${product.name}, ${formatBr(product.price)}`}>
         <div className="relative">
@@ -39,29 +83,18 @@ export function ProductCard({ product, showSold = false, rail = false }: Props) 
             className={`aspect-square w-full ${out ? 'opacity-60' : ''}`}
             imgClassName="transition-transform duration-300 group-hover:scale-[1.04]"
           />
-          <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
-            {showSold && product.sold > 0 && !out && (
-              <span className="rounded-md bg-accent px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">Top selling</span>
-            )}
-            <StockBadge state={product.stock} compact />
-          </div>
+          {badges}
         </div>
-        <div className="flex flex-1 flex-col px-3.5 pb-3.5 pt-3">
+        <div className="px-3.5 pt-3">
           <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-muted">{product.brand || product.category || ' '}</p>
           <h3 className="mt-0.5 line-clamp-2 min-h-[2.5rem] text-[15px] font-semibold leading-5">{product.name}</h3>
           <p className="mt-0.5 truncate text-xs text-muted">{product.specs || ' '}</p>
-          <p className="mt-2.5 pr-12 text-lg font-bold tracking-tight">{formatBr(product.price)}</p>
         </div>
       </Link>
-      <button
-        type="button"
-        onClick={quickAdd}
-        disabled={out}
-        aria-label={out ? `${product.name} is sold out` : `Add ${product.name} to cart`}
-        className="absolute bottom-3 right-3 grid h-11 w-11 place-items-center rounded-full bg-brand text-white shadow-sm transition-colors hover:bg-brand-hover disabled:bg-line disabled:text-muted"
-      >
-        <Icon name={out ? 'x' : 'plus'} size={20} />
-      </button>
+      <div className="flex items-center justify-between gap-2 px-3.5 pb-3.5 pt-2.5">
+        <p className="min-w-0 truncate text-lg font-bold tracking-tight">{formatBr(product.price)}</p>
+        <CartButton product={product} />
+      </div>
     </article>
   );
 }

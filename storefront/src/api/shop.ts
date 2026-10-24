@@ -3,7 +3,18 @@ import type {
   Account, DeliveryMethod, HomeData, Notice, Order, PaymentMethod, Product, ProductDetail, ProductPage, Sort, Tab,
 } from '../types';
 
-export interface ProductQuery { q?: string; category?: string; tab?: Tab; sort?: Sort; page?: number; limit?: number }
+export interface ProductQuery {
+  q?: string; category?: string; brand?: string; tab?: Tab; sort?: Sort; page?: number; limit?: number;
+  min_price?: number; max_price?: number; in_stock?: 1;
+}
+
+export interface Filters {
+  categories: { name: string; count: number }[];
+  brands: { name: string; count: number }[];
+  price: { min: number; max: number };
+}
+
+export const getFilters = async (): Promise<Filters> => (await api.get('/filters')).data;
 
 export const getHome = async (): Promise<HomeData> => (await api.get('/home')).data;
 

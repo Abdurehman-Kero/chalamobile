@@ -29,7 +29,7 @@ export function Rail({ title, subtitle, seeAllTo, children }: Props) {
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {seeAllTo && (
-            <Link to={seeAllTo} className="inline-flex min-h-10 items-center rounded-lg px-2 text-sm font-semibold text-brand hover:bg-brand-soft">
+            <Link to={seeAllTo} className="inline-flex min-h-10 items-center rounded-lg px-2 text-sm font-semibold text-link hover:bg-sunken">
               See all
             </Link>
           )}

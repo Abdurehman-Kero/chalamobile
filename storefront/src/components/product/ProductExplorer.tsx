@@ -34,7 +34,7 @@ interface Props {
 
 /**
  * The full product list, one long vertical grid. A tab bar (All / Top selling / Featured / New)
- * sticks under the header while scrolling, and "Show more" loads the next page.
+ * sticks under the header while scrolling, and "Load more" loads the next page.
  */
 export function ProductExplorer({ title, subtitle, q, category, initialTab = 'all', onClearFilters }: Props) {
   const [tab, setTab] = useState<Tab>(initialTab);
@@ -65,7 +65,7 @@ export function ProductExplorer({ title, subtitle, q, category, initialTab = 'al
               <button
                 key={t.key} type="button" role="tab" aria-selected={tab === t.key}
                 onClick={() => setTab(t.key)}
-                className={`relative min-h-12 shrink-0 px-3.5 text-sm font-semibold transition-colors ${tab === t.key ? 'text-brand' : 'text-muted hover:text-ink'}`}
+                className={`relative min-h-12 shrink-0 px-3.5 text-sm font-semibold transition-colors ${tab === t.key ? 'text-brand-ink' : 'text-muted hover:text-ink'}`}
               >
                 {t.label}
                 {tab === t.key && <span className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-brand" />}
@@ -119,12 +119,13 @@ export function ProductExplorer({ title, subtitle, q, category, initialTab = 'al
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
               {products.map(p => <ProductCard key={p.id} product={p} showSold={tab !== 'new'} />)}
             </div>
-            <div className="mt-8 flex flex-col items-center gap-2">
+            <div className="mt-8 space-y-2 text-center">
               <p className="text-sm text-muted">Showing {products.length} of {total}</p>
               {query.hasNextPage && (
-                <Button variant="secondary" size="lg" onClick={() => query.fetchNextPage()} disabled={query.isFetchingNextPage}>
-                  {query.isFetchingNextPage ? 'Loading…' : 'Show more'}
-                </Button>
+                <button type="button" onClick={() => query.fetchNextPage()} disabled={query.isFetchingNextPage}
+                  className="min-h-12 w-full rounded-xl border border-ink bg-surface text-[15px] font-semibold transition-colors hover:bg-ink hover:text-white disabled:opacity-60">
+                  {query.isFetchingNextPage ? 'Loading…' : 'Load more'}
+                </button>
               )}
             </div>
           </>

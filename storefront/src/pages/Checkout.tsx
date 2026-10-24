@@ -12,6 +12,7 @@ import type { DeliveryMethod, PaymentMethod } from '../types';
 import { Button, LinkButton, buttonClass } from '../components/ui/Button';
 import { FormAlert, TextArea, TextField } from '../components/ui/Field';
 import { EmptyState } from '../components/ui/States';
+import { PageHeader } from '../components/ui/PageHeader';
 import { Seo } from '../components/ui/Seo';
 import { ProductImage } from '../components/product/ProductImage';
 
@@ -147,7 +148,7 @@ export default function Checkout() {
   return (
     <div className="mx-auto max-w-5xl px-4 pb-10 pt-6 sm:px-6 lg:px-8">
       <Seo title="Checkout" />
-      <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Checkout</h1>
+      <PageHeader title="Checkout" fallback="/cart" />
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px] lg:items-start">
         <form onSubmit={onSubmit} noValidate className="space-y-6 rounded-3xl border border-line bg-surface p-5 sm:p-8">
           <section className="space-y-4" aria-label="Contact">

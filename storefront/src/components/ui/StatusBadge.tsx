@@ -10,7 +10,7 @@ export const STATUS_LABEL: Record<OrderStatus, string> = {
 
 const LOOK: Record<OrderStatus, string> = {
   pending: 'bg-warn-soft text-warn',
-  confirmed: 'bg-brand-soft text-brand',
+  confirmed: 'bg-brand-soft text-brand-ink',
   ready: 'bg-ok-soft text-ok',
   delivered: 'bg-ok-soft text-ok',
   cancelled: 'bg-sunken text-muted',

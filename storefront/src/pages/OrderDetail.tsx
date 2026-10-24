@@ -32,7 +32,7 @@ function Timeline({ order }: { order: Order }) {
         return (
           <li key={s.key} className="flex gap-3" aria-current={i === reached ? 'step' : undefined}>
             <div className="flex flex-col items-center">
-              <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full ${done ? 'bg-brand text-white' : 'border-2 border-line-strong bg-surface'}`}>
+              <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full ${done ? 'bg-brand text-on-brand' : 'border-2 border-line-strong bg-surface'}`}>
                 {done && <Icon name="check" size={15} />}
               </span>
               {i < steps.length - 1 && <span className={`my-1 w-0.5 flex-1 ${i < reached ? 'bg-brand' : 'bg-line-strong'}`} style={{ minHeight: 20 }} />}
@@ -68,7 +68,7 @@ export default function OrderDetail() {
   return (
     <div className="mx-auto max-w-3xl px-4 pb-10 pt-6 sm:px-6">
       <Seo title={`Order ${order.order_number}`} />
-      <Link to="/orders" className="inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-brand">
+      <Link to="/orders" className="inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-brand-ink">
         <Icon name="chevronLeft" size={18} /> My orders
       </Link>
 

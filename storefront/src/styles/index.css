@@ -1,28 +1,32 @@
 @import "tailwindcss";
 
 /*
-  Design tokens. Every colour in the store comes from here, so the whole look can be
-  changed in one place. Warm off-white canvas, white cards, one deep navy brand colour,
-  and a small clay accent used only for badges. No gradients.
+  Design tokens. Every colour in the store comes from here, so the whole look can be changed
+  in one place. A clean white page, one amber action colour (dark text on it, which stays
+  readable), near-black for the hero and footer, and teal for text links. No gradients.
 */
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
-  --color-canvas: #faf9f5;        /* page background */
+  --color-canvas: #ffffff;        /* page background */
   --color-surface: #ffffff;       /* cards, header, inputs */
-  --color-sunken: #f1efe8;        /* image wells, chips, quiet panels */
-  --color-line: #e6e3d8;          /* borders and dividers */
-  --color-line-strong: #cfcbbd;
+  --color-sunken: #f5f5f4;        /* image wells, chips, quiet panels */
+  --color-line: #e7e5e4;          /* borders and dividers */
+  --color-line-strong: #d0cdca;
 
-  --color-ink: #141413;           /* main text */
-  --color-muted: #66655d;         /* secondary text (AA on canvas and white) */
+  --color-ink: #171717;           /* main text */
+  --color-muted: #6a6862;         /* secondary text (AA on white) */
+  --color-night: #17171a;         /* hero and footer */
 
-  --color-brand: #1f2a44;         /* buttons, links, active states */
-  --color-brand-hover: #2c3b5f;
-  --color-brand-soft: #e9ecf3;
+  --color-brand: #f5a524;         /* buttons, active chips: always with dark text */
+  --color-brand-hover: #e8941a;
+  --color-brand-soft: #fef3dc;
+  --color-brand-ink: #9a5800;     /* amber text and icons that must be readable on white */
+  --color-on-brand: #171717;
 
-  --color-accent: #b5532f;        /* small badges only */
-  --color-accent-soft: #f6e8e1;
+  --color-link: #0b7a75;          /* text links and "See all" */
+  --color-accent: #171717;        /* small badges */
+  --color-accent-soft: #f5f5f4;
 
   --color-ok: #2b7a4b;
   --color-ok-soft: #e3f1e8;
@@ -51,7 +55,7 @@ img { max-width: 100%; }
 button, a { -webkit-tap-highlight-color: transparent; }
 
 :focus-visible {
-  outline: 2px solid var(--color-brand);
+  outline: 2px solid var(--color-ink);
   outline-offset: 2px;
   border-radius: 6px;
 }

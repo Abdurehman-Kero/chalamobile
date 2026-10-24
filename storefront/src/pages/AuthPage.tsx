@@ -80,7 +80,7 @@ export default function AuthPage({ mode }: { mode: 'login' | 'register' }) {
 
         <p className="mt-6 text-center text-sm text-muted">
           {isRegister ? 'Already have an account?' : 'New to Chala Mobile?'}{' '}
-          <Link to={other} className="font-semibold text-brand underline underline-offset-2">{isRegister ? 'Sign in' : 'Create an account'}</Link>
+          <Link to={other} className="font-semibold text-brand-ink underline underline-offset-2">{isRegister ? 'Sign in' : 'Create an account'}</Link>
         </p>
       </div>
     </div>

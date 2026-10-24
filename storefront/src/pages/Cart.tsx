@@ -5,6 +5,7 @@ import { LinkButton, buttonClass } from '../components/ui/Button';
 import { Icon } from '../components/ui/Icon';
 import { QtyStepper } from '../components/ui/QtyStepper';
 import { EmptyState } from '../components/ui/States';
+import { PageHeader } from '../components/ui/PageHeader';
 import { Seo } from '../components/ui/Seo';
 import { ProductImage } from '../components/product/ProductImage';
 
@@ -30,7 +31,7 @@ export default function Cart() {
   return (
     <div className="mx-auto max-w-5xl px-4 pb-28 pt-6 sm:px-6 lg:px-8 lg:pb-10">
       <Seo title="Your cart" />
-      <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Your cart <span className="text-lg font-medium text-muted">({count})</span></h1>
+      <PageHeader title="Your cart" note={`(${count})`} fallback="/shop" />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px] lg:items-start">
         <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface">
@@ -68,7 +69,7 @@ export default function Cart() {
             <span className="text-2xl font-bold">{formatBr(total)}</span>
           </div>
           <LinkButton to="/checkout" size="lg" className="mt-5 hidden w-full lg:inline-flex">Checkout</LinkButton>
-          <Link to="/shop" className="mt-3 hidden min-h-11 items-center justify-center text-sm font-semibold text-brand lg:flex">Continue shopping</Link>
+          <Link to="/shop" className="mt-3 hidden min-h-11 items-center justify-center text-sm font-semibold text-brand-ink lg:flex">Continue shopping</Link>
         </aside>
       </div>
 

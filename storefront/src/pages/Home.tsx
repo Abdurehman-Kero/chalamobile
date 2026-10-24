@@ -20,11 +20,11 @@ function Hero({ data }: { data: HomeData }) {
   const product = data.hero;
   return (
     <section className={`${wrap} pt-1 sm:pt-2`} aria-label="Welcome">
-      <div className="overflow-hidden rounded-3xl bg-brand text-white">
+      <div className="overflow-hidden rounded-3xl bg-night text-white">
         <div className="grid items-center gap-8 px-5 py-8 sm:px-10 sm:py-12 md:grid-cols-[1.15fr_0.85fr] lg:gap-14 lg:px-14 lg:py-16">
           <div>
             <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/90">
-              <Icon name="store" size={14} /> {data.total} products in the shop
+              <Icon name="store" size={14} className="text-brand" /> {data.total} products in the shop
             </p>
             <h1 className="mt-4 text-[1.9rem] font-bold leading-[1.1] tracking-tight sm:text-5xl">
               Phones, laptops and gadgets you can trust.
@@ -33,7 +33,7 @@ function Hero({ data }: { data: HomeData }) {
               Browse what is in stock, order online, and we confirm everything with you by phone.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-              <Link to="/shop" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-white px-6 text-base font-semibold text-brand transition-colors hover:bg-canvas">
+              <Link to="/shop" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand px-6 text-base font-semibold text-on-brand transition-colors hover:bg-brand-hover">
                 Shop now <Icon name="chevronRight" size={18} />
               </Link>
               <a href={`tel:${SHOP_PHONE}`} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/30 px-6 text-base font-semibold text-white transition-colors hover:bg-white/10">
@@ -56,7 +56,7 @@ function Hero({ data }: { data: HomeData }) {
               />
               <div className="flex items-center justify-between gap-3 px-2 pb-1.5 pt-3">
                 <span className="min-w-0">
-                  <span className="block text-[11px] font-semibold uppercase tracking-wide text-accent">Featured</span>
+                  <span className="block text-[11px] font-semibold uppercase tracking-wide text-brand-ink">Featured</span>
                   <span className="block truncate text-base font-semibold">{product.name}</span>
                 </span>
                 <span className="shrink-0 text-lg font-bold">{formatBr(product.price)}</span>
@@ -82,7 +82,7 @@ function Perks() {
       <ul className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-line bg-line md:grid-cols-4">
         {PERKS.map(p => (
           <li key={p.title} className="flex items-start gap-2.5 bg-surface px-3.5 py-3.5 sm:items-center sm:gap-3 sm:px-4 sm:py-4">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-soft text-brand sm:h-10 sm:w-10"><Icon name={p.icon} size={19} /></span>
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-soft text-brand-ink sm:h-10 sm:w-10"><Icon name={p.icon} size={19} /></span>
             <span className="min-w-0">
               <span className="block text-[13px] font-semibold leading-tight sm:text-sm">{p.title}</span>
               <span className="mt-0.5 block text-xs leading-tight text-muted">{p.text}</span>
@@ -94,39 +94,36 @@ function Perks() {
   );
 }
 
-/** Shop by category: a tile for each, with a photo taken from one of its products. */
+/** A swipeable row of round category icons, each with a photo from one of its products. */
 function Categories({ data }: { data: HomeData }) {
   const all: Product[] = [data.hero, ...data.trending, ...data.featured, ...data.picks].filter((p): p is Product => !!p);
   const photoFor = (category: string) => all.find(p => p.category === category && p.image)?.image ?? null;
   if (data.categories.length === 0) return null;
 
+  const item = 'group flex w-[84px] shrink-0 flex-col items-center gap-2 text-center sm:w-24';
+  const label = 'line-clamp-2 text-xs font-semibold leading-tight';
   return (
-    <section className={`${wrap} mt-10 sm:mt-12`} aria-label="Shop by category">
-      <h2 className="mb-3 text-xl font-bold tracking-tight sm:text-2xl">Shop by category</h2>
-      <ul className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
-        {data.categories.slice(0, 4).map(c => (
-          <li key={c.name} className="min-w-0">
-            <Link
-              to={`/shop?category=${encodeURIComponent(c.name)}`}
-              className="group block overflow-hidden rounded-2xl border border-line bg-surface transition-all duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-pop"
-            >
+    <section className={`${wrap} mt-8 sm:mt-10`} aria-label="Shop by category">
+      <div className="rail overflow-x-auto pb-1">
+        {/* mx-auto centres the row when it fits and lets it scroll from the left when it does not. */}
+        <div className="mx-auto flex w-max gap-3 sm:gap-5">
+          <Link to="/shop" className={item}>
+            <span className="grid h-[72px] w-[72px] place-items-center rounded-2xl bg-brand-soft text-brand-ink transition-transform group-hover:-translate-y-0.5 sm:h-20 sm:w-20">
+              <Icon name="grid" size={28} />
+            </span>
+            <span className={label}>View all</span>
+          </Link>
+          {data.categories.map(c => (
+            <Link key={c.name} to={`/shop?category=${encodeURIComponent(c.name)}`} className={item}>
               <ProductImage
-                src={photoFor(c.name)} alt="" width={400}
-                sizes="(min-width: 768px) 25vw, 46vw"
-                className="aspect-[4/3] w-full"
-                imgClassName="transition-transform duration-300 group-hover:scale-[1.04]"
+                src={photoFor(c.name)} alt="" width={160} sizes="80px"
+                className="h-[72px] w-[72px] rounded-2xl border border-line transition-transform group-hover:-translate-y-0.5 sm:h-20 sm:w-20"
               />
-              <div className="flex items-center justify-between gap-2 px-3.5 py-3">
-                <span className="min-w-0">
-                  <span className="block truncate text-[15px] font-semibold">{c.name}</span>
-                  <span className="block text-xs text-muted">{c.count} {c.count === 1 ? 'item' : 'items'}</span>
-                </span>
-                <Icon name="chevronRight" size={18} className="shrink-0 text-muted transition-transform group-hover:translate-x-0.5" />
-              </div>
+              <span className={label}>{c.name}</span>
             </Link>
-          </li>
-        ))}
-      </ul>
+          ))}
+        </div>
+      </div>
     </section>
   );
 }
@@ -136,13 +133,13 @@ function RepairBand() {
     <section className={`${wrap} mt-12 sm:mt-14`} aria-label="Repairs">
       <div className="flex flex-col gap-5 rounded-3xl bg-brand-soft p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
         <div className="flex items-start gap-4">
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-surface text-brand"><Icon name="wrench" size={24} /></span>
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-surface text-brand-ink"><Icon name="wrench" size={24} /></span>
           <div>
             <h2 className="text-xl font-bold tracking-tight">Phone or laptop broken?</h2>
             <p className="mt-1 max-w-xl text-muted">Bring it to the shop. We tell you what is wrong, what it costs and when it will be ready, before we start.</p>
           </div>
         </div>
-        <Link to="/contact" className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-xl bg-brand px-6 text-base font-semibold text-white transition-colors hover:bg-brand-hover">
+        <Link to="/contact" className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-xl bg-brand px-6 text-base font-semibold text-on-brand transition-colors hover:bg-brand-hover">
           Repair details
         </Link>
       </div>

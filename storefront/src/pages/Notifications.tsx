@@ -7,6 +7,7 @@ import { timeAgo } from '../lib/format';
 import { buttonClass } from '../components/ui/Button';
 import { Icon } from '../components/ui/Icon';
 import { EmptyState, ErrorState, Skeleton } from '../components/ui/States';
+import { PageHeader } from '../components/ui/PageHeader';
 import { Seo } from '../components/ui/Seo';
 
 export default function Notifications() {
@@ -30,7 +31,7 @@ export default function Notifications() {
   return (
     <div className="mx-auto max-w-2xl px-4 pb-10 pt-6 sm:px-6">
       <Seo title="Notifications" />
-      <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Notifications</h1>
+      <PageHeader title="Notifications" fallback="/" />
 
       {isPending ? (
         <div className="mt-6 space-y-3">{Array.from({ length: 3 }, (_, i) => <Skeleton key={i} className="h-20" />)}</div>
@@ -44,7 +45,7 @@ export default function Notifications() {
           {data.notifications.map(n => {
             const body = (
               <div className={`flex gap-3 rounded-2xl border p-4 ${n.read_at ? 'border-line bg-surface' : 'border-brand/30 bg-brand-soft'}`}>
-                <span className={`mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full ${n.read_at ? 'bg-sunken text-muted' : 'bg-brand text-white'}`}>
+                <span className={`mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full ${n.read_at ? 'bg-sunken text-muted' : 'bg-brand text-on-brand'}`}>
                   <Icon name="bell" size={18} />
                 </span>
                 <div className="min-w-0 flex-1">

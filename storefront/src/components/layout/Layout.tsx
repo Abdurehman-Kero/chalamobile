@@ -2,13 +2,14 @@ import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { AnnouncementBar } from './AnnouncementBar';
 import { Header } from './Header';
-import { CategoryBar } from './CategoryBar';
+import { SubNav } from './SubNav';
 import { Footer } from './Footer';
 import { BackToTop } from './BackToTop';
 import { Toaster } from './Toaster';
 
-// Pages that browse the catalogue show the category chips; checkout-style pages stay calm.
-const SHOWS_CATEGORIES = new Set(['/', '/shop']);
+// Browsing pages show the main links.
+// Checkout and sign-in stay calm and uncluttered.
+const CALM = new Set(['/checkout', '/login', '/register']);
 
 export function Layout() {
   const { pathname } = useLocation();
@@ -21,12 +22,12 @@ export function Layout() {
   // overflow-x-clip (not hidden) keeps the sticky header and tab bar working.
   return (
     <div className="flex min-h-dvh flex-col overflow-x-clip [&>*]:min-w-0">
-      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-brand focus:px-4 focus:py-2 focus:text-white">
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-brand focus:px-4 focus:py-2 focus:text-on-brand">
         Skip to content
       </a>
       <AnnouncementBar />
       <Header />
-      {SHOWS_CATEGORIES.has(pathname) && <CategoryBar />}
+      {!CALM.has(pathname) && <SubNav />}
       <main id="main" className="flex-1">
         <Outlet />
       </main>
