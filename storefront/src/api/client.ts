@@ -31,6 +31,10 @@ export function errorMessage(err: unknown, fallback = 'Something went wrong. Ple
   if (axios.isAxiosError(err)) {
     if (!err.response) return 'Cannot reach the shop right now. Check your internet connection and try again.';
     const message = (err.response.data as { error?: string } | undefined)?.error;
+    // The shop server answered but does not have the store yet (an older version is still running).
+    if (err.response.status === 404 && message === 'Route not found') {
+      return 'The shop server is being updated. Please try again in a few minutes.';
+    }
     if (message) return message;
     if (err.response.status === 429) return 'Too many attempts. Please wait a few minutes.';
     if (err.response.status >= 500) return 'The shop server had a problem. Please try again in a moment.';
