@@ -41,7 +41,11 @@ app.use('/api/alerts',    require('./routes/alerts.routes'));
 app.use('/api/reports',   require('./routes/reports.routes'));
 
 // ── Health check ──────────────────────────────────────
-app.get('/health', (req, res) => res.json({ status: 'ok', service: 'ChalaMob CRM API', time: new Date() }));
+// `commit` shows which version the host is really running (Render sets RENDER_GIT_COMMIT).
+app.get('/health', (req, res) => res.json({
+  status: 'ok', service: 'ChalaMob CRM API', time: new Date(),
+  commit: (process.env.RENDER_GIT_COMMIT || '').slice(0, 7) || undefined,
+}));
 
 // ── 404 handler ───────────────────────────────────────
 app.use((req, res) => res.status(404).json({ error: 'Route not found' }));
@@ -63,7 +67,10 @@ app.use((err, req, res, next) => {
 // ── Start ─────────────────────────────────────────────
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  offlineSync.cleanup();
+  // Say plainly if the database cannot be reached, instead of a stream of raw connection errors.
+  require('./db/knex').raw('select 1')
+    .then(() => offlineSync.cleanup())
+    .catch((err) => console.error(`\n⚠️  ${require('./db/explain').explainDbError(err)}\n`));
   console.log(`\n🚀 ChalaMob CRM API running on http://localhost:${PORT}`);
   console.log(`   Health: http://localhost:${PORT}/health\n`);
 });
