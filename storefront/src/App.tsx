@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { Route, Routes } from 'react-router-dom';
+import { useT } from './i18n';
 import { Layout } from './components/layout/Layout';
 import { RequireAuth } from './components/layout/RequireAuth';
 import { Skeleton } from './components/ui/States';
@@ -17,11 +18,14 @@ const Notifications = lazy(() => import('./pages/Notifications'));
 const Contact = lazy(() => import('./pages/Contact'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
-const Loading = () => (
-  <div className="mx-auto max-w-5xl space-y-4 px-4 py-8" aria-busy="true" aria-label="Loading">
-    <Skeleton className="h-8 w-48" /><Skeleton className="h-64" />
-  </div>
-);
+const Loading = () => {
+  const t = useT();
+  return (
+    <div className="mx-auto max-w-5xl space-y-4 px-4 py-8" aria-busy="true" aria-label={t('common.loading')}>
+      <Skeleton className="h-8 w-48" /><Skeleton className="h-64" />
+    </div>
+  );
+};
 
 export default function App() {
   return (

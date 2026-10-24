@@ -1,16 +1,18 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useT } from '../../i18n';
 import { useToast } from '../../store/toast';
 import { Icon } from '../ui/Icon';
 
 export function Toaster() {
+  const t = useT();
   const toast = useToast(s => s.toast);
   const hide = useToast(s => s.hide);
 
   useEffect(() => {
     if (!toast) return;
-    const t = setTimeout(hide, 3800);
-    return () => clearTimeout(t);
+    const timer = setTimeout(hide, 3800);
+    return () => clearTimeout(timer);
   }, [toast, hide]);
 
   return (
@@ -24,7 +26,7 @@ export function Toaster() {
               {toast.actionLabel}
             </Link>
           )}
-          <button type="button" onClick={hide} aria-label="Dismiss" className="shrink-0 rounded-md p-1 text-white/70 hover:text-white">
+          <button type="button" onClick={hide} aria-label={t('common.dismiss')} className="shrink-0 rounded-md p-1 text-white/70 hover:text-white">
             <Icon name="x" size={16} />
           </button>
         </div>

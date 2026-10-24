@@ -1,4 +1,5 @@
 import { forwardRef, useId, type InputHTMLAttributes, type TextareaHTMLAttributes } from 'react';
+import { useT } from '../../i18n';
 
 interface FieldProps {
   label: string;
@@ -13,10 +14,11 @@ const input = (error?: string) =>
 export const TextField = forwardRef<HTMLInputElement, FieldProps & InputHTMLAttributes<HTMLInputElement>>(
   function TextField({ label, error, hint, optional, className = '', ...rest }, ref) {
     const id = useId();
+    const t = useT();
     return (
       <div className={className}>
         <label htmlFor={id} className="mb-1.5 block text-sm font-semibold">
-          {label}{optional && <span className="ml-1 font-normal text-muted">(optional)</span>}
+          {label}{optional && <span className="ml-1 font-normal text-muted">{t('common.optional')}</span>}
         </label>
         <input
           ref={ref} id={id} className={`${input(error)} h-12`}
@@ -33,10 +35,11 @@ export const TextField = forwardRef<HTMLInputElement, FieldProps & InputHTMLAttr
 export const TextArea = forwardRef<HTMLTextAreaElement, FieldProps & TextareaHTMLAttributes<HTMLTextAreaElement>>(
   function TextArea({ label, error, hint, optional, className = '', ...rest }, ref) {
     const id = useId();
+    const t = useT();
     return (
       <div className={className}>
         <label htmlFor={id} className="mb-1.5 block text-sm font-semibold">
-          {label}{optional && <span className="ml-1 font-normal text-muted">(optional)</span>}
+          {label}{optional && <span className="ml-1 font-normal text-muted">{t('common.optional')}</span>}
         </label>
         <textarea
           ref={ref} id={id} rows={3} className={`${input(error)} py-3`}

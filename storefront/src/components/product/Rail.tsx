@@ -1,5 +1,6 @@
 import { useRef, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { useT } from '../../i18n';
 import { Icon } from '../ui/Icon';
 
 interface Props {
@@ -14,6 +15,7 @@ interface Props {
  * peeks in, so it is obvious there is more. On wide screens, arrow buttons scroll it.
  */
 export function Rail({ title, subtitle, seeAllTo, children }: Props) {
+  const t = useT();
   const scroller = useRef<HTMLDivElement>(null);
   const scrollBy = (dir: 1 | -1) => {
     const el = scroller.current;
@@ -21,24 +23,24 @@ export function Rail({ title, subtitle, seeAllTo, children }: Props) {
   };
 
   return (
-    <section className="mx-auto mt-10 w-full max-w-7xl sm:mt-12" aria-label={title}>
-      <div className="mb-3 flex items-end justify-between gap-3 px-4 sm:px-6 lg:px-8">
+    <section className="mx-auto mt-8 w-full max-w-7xl sm:mt-12" aria-label={title}>
+      <div className="mb-2.5 flex items-end justify-between gap-3 px-4 sm:mb-3 sm:px-6 lg:px-8">
         <div className="min-w-0">
-          <h2 className="text-xl font-bold tracking-tight sm:text-2xl">{title}</h2>
-          {subtitle && <p className="mt-0.5 text-sm text-muted">{subtitle}</p>}
+          <h2 className="text-lg font-bold tracking-tight sm:text-2xl">{title}</h2>
+          {subtitle && <p className="mt-0.5 text-[13px] text-muted sm:text-sm">{subtitle}</p>}
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {seeAllTo && (
             <Link to={seeAllTo} className="inline-flex min-h-10 items-center rounded-lg px-2 text-sm font-semibold text-link hover:bg-sunken">
-              See all
+              {t('common.seeAll')}
             </Link>
           )}
           <div className="hidden gap-1.5 md:flex">
-            <button type="button" onClick={() => scrollBy(-1)} aria-label={`Scroll ${title} left`}
+            <button type="button" onClick={() => scrollBy(-1)} aria-label={`${title} ←`}
               className="grid h-10 w-10 place-items-center rounded-full border border-line-strong bg-surface hover:bg-sunken">
               <Icon name="chevronLeft" />
             </button>
-            <button type="button" onClick={() => scrollBy(1)} aria-label={`Scroll ${title} right`}
+            <button type="button" onClick={() => scrollBy(1)} aria-label={`${title} →`}
               className="grid h-10 w-10 place-items-center rounded-full border border-line-strong bg-surface hover:bg-sunken">
               <Icon name="chevronRight" />
             </button>
@@ -47,7 +49,7 @@ export function Rail({ title, subtitle, seeAllTo, children }: Props) {
       </div>
       <div
         ref={scroller}
-        className="rail flex snap-x snap-proximity gap-3 overflow-x-auto scroll-px-4 px-4 pb-3 sm:gap-4 sm:scroll-px-6 sm:px-6 lg:scroll-px-8 lg:px-8"
+        className="rail flex snap-x snap-proximity gap-2.5 overflow-x-auto scroll-px-4 px-4 pb-3 sm:gap-4 sm:scroll-px-6 sm:px-6 lg:scroll-px-8 lg:px-8"
         tabIndex={0}
       >
         {children}

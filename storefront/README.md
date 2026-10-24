@@ -28,6 +28,13 @@ npm run dev                   # http://localhost:5173
 - Orders are requests: no payment is taken online. The shop confirms by phone; confirming in the CRM app turns it into a sale and takes the stock.
 - The notification bell checks for updates every 45 seconds while signed in.
 
+## Languages
+
+English (default), Afaan Oromoo and Amharic. The toggle (`EN ▾`) is next to the cart, and in the phone menu. The choice is
+remembered on the device. Every text lives in `src/i18n/`: `en.ts` is the source, `om.ts` and `am.ts` must have the same keys
+(the build fails if one is missing). To fix a translation, edit that one line. Product names, specs and brands are shown as
+the owner typed them in the CRM; the four shop categories are translated, others are shown as typed.
+
 ## Deploy (frontend only)
 
 1. Build command `npm run build`, output folder `dist`.

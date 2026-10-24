@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
+import { useT } from '../../i18n';
 import { AnnouncementBar } from './AnnouncementBar';
 import { Header } from './Header';
 import { SubNav } from './SubNav';
@@ -12,6 +13,7 @@ import { Toaster } from './Toaster';
 const CALM = new Set(['/checkout', '/login', '/register']);
 
 export function Layout() {
+  const t = useT();
   const { pathname } = useLocation();
 
   // A new page starts at the top (the browser keeps its place for back/forward on its own).
@@ -23,7 +25,7 @@ export function Layout() {
   return (
     <div className="flex min-h-dvh flex-col overflow-x-clip [&>*]:min-w-0">
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-brand focus:px-4 focus:py-2 focus:text-on-brand">
-        Skip to content
+        {t('common.skip')}
       </a>
       <AnnouncementBar />
       <Header />

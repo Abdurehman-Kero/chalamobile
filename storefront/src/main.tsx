@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import App from './App';
 import { warmUpServer } from './api/client';
+import { useLang } from './i18n';
 import './styles/index.css';
 
 const queryClient = new QueryClient({
@@ -21,6 +22,10 @@ const queryClient = new QueryClient({
 });
 
 warmUpServer();
+
+// The page's language follows the customer's choice (screen readers and browsers use it).
+document.documentElement.lang = useLang.getState().lang;
+useLang.subscribe((state) => { document.documentElement.lang = state.lang; });
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

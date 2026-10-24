@@ -2,31 +2,34 @@ import { Link, useLocation, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getOrder } from '../api/shop';
 import { errorMessage } from '../api/client';
+import { useT, type Key } from '../i18n';
 import { SHOP_PHONE, SHOP_PHONE_DISPLAY } from '../lib/config';
 import { formatBr, formatDate } from '../lib/format';
 import type { Order } from '../types';
 import { buttonClass } from '../components/ui/Button';
 import { Icon } from '../components/ui/Icon';
+import { PageHeader } from '../components/ui/PageHeader';
 import { EmptyState, ErrorState, Skeleton } from '../components/ui/States';
 import { Seo } from '../components/ui/Seo';
 import { StatusBadge } from '../components/ui/StatusBadge';
 
-const PAYMENT_LABEL = { telebirr: 'Telebirr', cbe: 'CBE', cash: 'Cash' } as const;
+const PAYMENT_KEY: Record<Order['payment_method'], Key> = { telebirr: 'pay.telebirr', cbe: 'pay.cbe', cash: 'pay.cash' };
 
 function Timeline({ order }: { order: Order }) {
-  const steps = [
-    { key: 'pending', label: 'Order received' },
-    { key: 'confirmed', label: 'Confirmed by the shop' },
-    { key: 'ready', label: order.delivery_method === 'pickup' ? 'Ready for pickup' : 'On its way' },
-    { key: 'delivered', label: 'Completed' },
+  const t = useT();
+  const steps: { key: string; label: Key }[] = [
+    { key: 'pending', label: 'od.received' },
+    { key: 'confirmed', label: 'od.confirmedStep' },
+    { key: 'ready', label: order.delivery_method === 'pickup' ? 'od.pickupReady' : 'od.onTheWay' },
+    { key: 'delivered', label: 'od.completed' },
   ];
   const reached = steps.findIndex(s => s.key === order.status);
 
   if (order.status === 'cancelled') {
-    return <p className="rounded-xl bg-sunken px-4 py-3 text-sm text-muted">This order was cancelled. Call the shop if you have any questions.</p>;
+    return <p className="rounded-xl bg-sunken px-4 py-3 text-sm text-muted">{t('od.cancelledText')}</p>;
   }
   return (
-    <ol className="space-y-0" aria-label="Order progress">
+    <ol className="space-y-0" aria-label={t('od.progress')}>
       {steps.map((s, i) => {
         const done = i <= reached;
         return (
@@ -37,7 +40,7 @@ function Timeline({ order }: { order: Order }) {
               </span>
               {i < steps.length - 1 && <span className={`my-1 w-0.5 flex-1 ${i < reached ? 'bg-brand' : 'bg-line-strong'}`} style={{ minHeight: 20 }} />}
             </div>
-            <p className={`pb-5 pt-0.5 text-sm ${done ? 'font-semibold' : 'text-muted'}`}>{s.label}</p>
+            <p className={`pb-5 pt-0.5 text-sm ${done ? 'font-semibold' : 'text-muted'}`}>{t(s.label)}</p>
           </li>
         );
       })}
@@ -46,6 +49,7 @@ function Timeline({ order }: { order: Order }) {
 }
 
 export default function OrderDetail() {
+  const t = useT();
   const id = Number(useParams().id);
   const placed = (useLocation().state as { placed?: boolean } | null)?.placed;
 
@@ -61,69 +65,60 @@ export default function OrderDetail() {
   if (isError) {
     const notFound = (error as { response?: { status?: number } }).response?.status === 404;
     return notFound
-      ? <EmptyState icon="box" title="Order not found" action={<Link to="/orders" className={buttonClass()}>My orders</Link>} />
+      ? <EmptyState icon="box" title={t('od.notFound')} action={<Link to="/orders" className={buttonClass()}>{t('orders.title')}</Link>} />
       : <ErrorState message={errorMessage(error)} onRetry={() => refetch()} />;
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 pb-10 pt-6 sm:px-6">
-      <Seo title={`Order ${order.order_number}`} />
-      <Link to="/orders" className="inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-brand-ink">
-        <Icon name="chevronLeft" size={18} /> My orders
-      </Link>
+    <div className="mx-auto max-w-3xl px-4 pb-10 pt-4 sm:px-6 sm:pt-6">
+      <Seo title={order.order_number} />
+      <PageHeader title={order.order_number} fallback="/orders"><StatusBadge status={order.status} /></PageHeader>
+      <p className="mt-1 text-sm text-muted">{t('od.placed', { date: formatDate(order.created_at) })}</p>
 
       {placed && (
         <div role="status" className="mt-3 flex gap-3 rounded-2xl bg-ok-soft p-4 text-ok">
           <Icon name="check" size={22} className="mt-0.5 shrink-0" />
           <div>
-            <p className="font-bold">Thank you! Your order is in.</p>
-            <p className="text-sm">We will call you on {order.phone} to confirm. You can follow it here.</p>
+            <p className="font-bold">{t('od.thanks')}</p>
+            <p className="text-sm">{t('od.thanksText', { phone: order.phone })}</p>
           </div>
         </div>
       )}
 
-      <div className="mt-4 flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">{order.order_number}</h1>
-          <p className="text-sm text-muted">Placed {formatDate(order.created_at)}</p>
-        </div>
-        <StatusBadge status={order.status} />
-      </div>
-
-      <section className="mt-6 rounded-2xl border border-line bg-surface p-5" aria-label="Progress">
+      <section className="mt-4 rounded-2xl border border-line bg-surface p-4 sm:mt-6 sm:p-5" aria-label={t('od.progress')}>
         <Timeline order={order} />
       </section>
 
-      <section className="mt-4 rounded-2xl border border-line bg-surface p-5" aria-label="Items">
-        <h2 className="mb-2 text-lg font-bold">Items</h2>
+      <section className="mt-4 rounded-2xl border border-line bg-surface p-4 sm:p-5" aria-label={t('od.items')}>
+        <h2 className="mb-2 text-lg font-bold">{t('od.items')}</h2>
         <ul className="divide-y divide-line">
           {order.items.map((i, n) => (
             <li key={n} className="flex justify-between gap-3 py-2.5 text-sm">
-              <span>{i.qty} × {i.name}</span>
-              <span className="font-semibold">{formatBr(i.qty * i.unit_price)}</span>
+              <span className="min-w-0">{i.qty} × {i.name}</span>
+              <span className="shrink-0 font-semibold">{formatBr(i.qty * i.unit_price)}</span>
             </li>
           ))}
         </ul>
         <div className="mt-2 flex justify-between border-t border-line pt-3">
-          <span className="font-semibold">Total</span>
+          <span className="font-semibold">{t('od.total')}</span>
           <span className="text-xl font-bold">{formatBr(order.total)}</span>
         </div>
       </section>
 
-      <section className="mt-4 rounded-2xl border border-line bg-surface p-5" aria-label="Delivery and payment">
+      <section className="mt-4 rounded-2xl border border-line bg-surface p-4 sm:p-5" aria-label={t('od.payment')}>
         <dl className="grid gap-4 text-sm sm:grid-cols-2">
           <div>
-            <dt className="text-muted">{order.delivery_method === 'delivery' ? 'Delivery address' : 'Pickup'}</dt>
-            <dd className="mt-0.5 font-semibold">{order.delivery_method === 'delivery' ? order.address : 'Collect from the shop'}</dd>
+            <dt className="text-muted">{order.delivery_method === 'delivery' ? t('od.deliveryAddress') : t('od.pickup')}</dt>
+            <dd className="mt-0.5 font-semibold">{order.delivery_method === 'delivery' ? order.address : t('od.collect')}</dd>
           </div>
-          <div><dt className="text-muted">Payment</dt><dd className="mt-0.5 font-semibold">{PAYMENT_LABEL[order.payment_method]}</dd></div>
-          <div><dt className="text-muted">Contact</dt><dd className="mt-0.5 font-semibold">{order.customer_name}, {order.phone}</dd></div>
-          {order.note && <div><dt className="text-muted">Your note</dt><dd className="mt-0.5 font-semibold">{order.note}</dd></div>}
+          <div><dt className="text-muted">{t('od.payment')}</dt><dd className="mt-0.5 font-semibold">{t(PAYMENT_KEY[order.payment_method])}</dd></div>
+          <div><dt className="text-muted">{t('od.contact')}</dt><dd className="mt-0.5 font-semibold">{order.customer_name}, {order.phone}</dd></div>
+          {order.note && <div><dt className="text-muted">{t('od.yourNote')}</dt><dd className="mt-0.5 font-semibold">{order.note}</dd></div>}
         </dl>
       </section>
 
       <a href={`tel:${SHOP_PHONE}`} className={`${buttonClass('secondary', 'lg')} mt-5 w-full`}>
-        <Icon name="phone" size={18} /> Questions? Call {SHOP_PHONE_DISPLAY}
+        <Icon name="phone" size={18} /> {t('od.questions', { phone: SHOP_PHONE_DISPLAY })}
       </a>
     </div>
   );

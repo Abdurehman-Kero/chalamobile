@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { useT } from '../../i18n';
 import { Button } from './Button';
 import { Icon, type IconName } from './Icon';
 
@@ -14,10 +15,11 @@ export function useSlowHint(loading: boolean, afterMs = 4000): boolean {
 }
 
 export function SlowHint({ show }: { show: boolean }) {
+  const t = useT();
   if (!show) return null;
   return (
     <p role="status" className="mx-auto mt-4 max-w-md rounded-xl bg-sunken px-4 py-3 text-center text-sm text-muted">
-      Waking up the shop server. The first visit can take up to a minute, thanks for your patience.
+      {t('slow.hint')}
     </p>
   );
 }
@@ -34,12 +36,13 @@ export function EmptyState({ icon = 'box', title, message, action }: { icon?: Ic
 }
 
 export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  const t = useT();
   return (
     <div role="alert" className="mx-auto flex max-w-sm flex-col items-center px-4 py-14 text-center">
       <span className="mb-4 grid h-14 w-14 place-items-center rounded-full bg-danger-soft text-danger"><Icon name="x" size={26} /></span>
-      <h2 className="text-lg font-semibold">We couldn't load this</h2>
+      <h2 className="text-lg font-semibold">{t('err.title')}</h2>
       <p className="mt-1 text-sm text-muted">{message}</p>
-      {onRetry && <Button className="mt-5" onClick={onRetry}>Try again</Button>}
+      {onRetry && <Button className="mt-5" onClick={onRetry}>{t('common.tryAgain')}</Button>}
     </div>
   );
 }

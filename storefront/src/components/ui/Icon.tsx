@@ -7,6 +7,8 @@ const PATHS = {
   bell: <><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z" /><path d="M10 19a2 2 0 0 0 4 0" /></>,
   user: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></>,
   phone: <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z" />,
+  menu: <path d="M4 7h16M4 12h16M4 17h16" />,
+  globe: <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c2.800 2.600 4 5.700 4 9s-1.200 6.400-4 9c-2.800-2.600-4-5.700-4-9s1.200-6.400 4-9Z" /></>,
   chevronLeft: <path d="m15 6-6 6 6 6" />,
   chevronRight: <path d="m9 6 6 6-6 6" />,
   chevronDown: <path d="m6 9 6 6 6-6" />,

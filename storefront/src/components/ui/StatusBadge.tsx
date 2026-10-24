@@ -1,11 +1,12 @@
+import { useT, type Key } from '../../i18n';
 import type { OrderStatus } from '../../types';
 
-export const STATUS_LABEL: Record<OrderStatus, string> = {
-  pending: 'Waiting for confirmation',
-  confirmed: 'Confirmed',
-  ready: 'Ready',
-  delivered: 'Completed',
-  cancelled: 'Cancelled',
+export const STATUS_KEY: Record<OrderStatus, Key> = {
+  pending: 'status.pending',
+  confirmed: 'status.confirmed',
+  ready: 'status.ready',
+  delivered: 'status.delivered',
+  cancelled: 'status.cancelled',
 };
 
 const LOOK: Record<OrderStatus, string> = {
@@ -17,5 +18,6 @@ const LOOK: Record<OrderStatus, string> = {
 };
 
 export function StatusBadge({ status }: { status: OrderStatus }) {
-  return <span className={`inline-flex items-center rounded-md px-2.5 py-1 text-xs font-semibold ${LOOK[status]}`}>{STATUS_LABEL[status]}</span>;
+  const t = useT();
+  return <span className={`inline-flex items-center rounded-md px-2.5 py-1 text-xs font-semibold ${LOOK[status]}`}>{t(STATUS_KEY[status])}</span>;
 }

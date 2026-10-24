@@ -1,8 +1,10 @@
 import { Helmet } from 'react-helmet-async';
+import { useT } from '../../i18n';
 import { SHOP_NAME } from '../../lib/config';
 
 export function Seo({ title, description }: { title?: string; description?: string }) {
-  const full = title ? `${title} | ${SHOP_NAME}` : `${SHOP_NAME}: phones, laptops and accessories`;
+  const t = useT();
+  const full = title ? `${title} | ${SHOP_NAME}` : t('seo.default');
   return (
     <Helmet>
       <title>{full}</title>

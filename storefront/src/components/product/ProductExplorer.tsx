@@ -2,23 +2,24 @@ import { useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { getProducts } from '../../api/shop';
 import { errorMessage } from '../../api/client';
+import { useT, type Key } from '../../i18n';
 import type { Sort, Tab } from '../../types';
 import { Button } from '../ui/Button';
 import { EmptyState, ErrorState, SlowHint, useSlowHint } from '../ui/States';
 import { ProductCard, ProductCardSkeleton } from './ProductCard';
 
-const TABS: { key: Tab; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'top', label: 'Top selling' },
-  { key: 'featured', label: 'Featured' },
-  { key: 'new', label: 'New arrivals' },
+const TABS: { key: Tab; label: Key }[] = [
+  { key: 'all', label: 'tab.all' },
+  { key: 'top', label: 'tab.top' },
+  { key: 'featured', label: 'tab.featured' },
+  { key: 'new', label: 'tab.new' },
 ];
 
-const SORTS: { key: Sort; label: string }[] = [
-  { key: 'name', label: 'Name (A to Z)' },
-  { key: 'price_asc', label: 'Price: low to high' },
-  { key: 'price_desc', label: 'Price: high to low' },
-  { key: 'new', label: 'Newest first' },
+const SORTS: { key: Sort; label: Key }[] = [
+  { key: 'name', label: 'sort.name' },
+  { key: 'price_asc', label: 'sort.priceAsc' },
+  { key: 'price_desc', label: 'sort.priceDesc' },
+  { key: 'new', label: 'sort.newest' },
 ];
 
 const PAGE_SIZE = 12;
@@ -37,6 +38,7 @@ interface Props {
  * sticks under the header while scrolling, and "Load more" loads the next page.
  */
 export function ProductExplorer({ title, subtitle, q, category, initialTab = 'all', onClearFilters }: Props) {
+  const t = useT();
   const [tab, setTab] = useState<Tab>(initialTab);
   const [sort, setSort] = useState<Sort>('name');
 
@@ -51,57 +53,51 @@ export function ProductExplorer({ title, subtitle, q, category, initialTab = 'al
   const products = query.data?.pages.flatMap(p => p.products) ?? [];
   const total = query.data?.pages[0]?.total ?? 0;
 
+  const sortSelect = (
+    <select
+      value={sort} onChange={e => setSort(e.target.value as Sort)} aria-label={t('sort.label')}
+      className="min-h-10 min-w-0 rounded-lg border border-line-strong bg-surface px-3 text-sm text-ink"
+    >
+      {SORTS.map(s => <option key={s.key} value={s.key}>{t(s.label)}</option>)}
+    </select>
+  );
+
   return (
-    <section id="explore" className="mt-12 scroll-mt-24 sm:mt-14" aria-label={title}>
+    <section id="explore" className="mt-10 scroll-mt-24 sm:mt-14" aria-label={title}>
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <h2 className="text-xl font-bold tracking-tight sm:text-2xl">{title}</h2>
-        {subtitle && <p className="mt-0.5 text-sm text-muted">{subtitle}</p>}
+        <h2 className="text-lg font-bold tracking-tight sm:text-2xl">{title}</h2>
+        {subtitle && <p className="mt-0.5 text-[13px] text-muted sm:text-sm">{subtitle}</p>}
       </div>
 
       <div className="sticky top-[var(--header-h,0px)] z-20 mt-3 border-b border-line bg-canvas/95 backdrop-blur">
         <div className="mx-auto flex w-full max-w-7xl items-center gap-2 px-4 sm:px-6 lg:px-8">
-          <div role="tablist" aria-label="Product views" className="rail flex flex-1 gap-1 overflow-x-auto">
-            {TABS.map(t => (
+          <div role="tablist" aria-label={t('tab.aria')} className="rail flex flex-1 gap-0.5 overflow-x-auto sm:gap-1">
+            {TABS.map(x => (
               <button
-                key={t.key} type="button" role="tab" aria-selected={tab === t.key}
-                onClick={() => setTab(t.key)}
-                className={`relative min-h-12 shrink-0 px-3.5 text-sm font-semibold transition-colors ${tab === t.key ? 'text-brand-ink' : 'text-muted hover:text-ink'}`}
+                key={x.key} type="button" role="tab" aria-selected={tab === x.key}
+                onClick={() => setTab(x.key)}
+                className={`relative min-h-11 shrink-0 px-3 text-[13px] font-semibold transition-colors sm:min-h-12 sm:px-3.5 sm:text-sm ${tab === x.key ? 'text-brand-ink' : 'text-muted hover:text-ink'}`}
               >
-                {t.label}
-                {tab === t.key && <span className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-brand" />}
+                {t(x.label)}
+                {tab === x.key && <span className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-brand" />}
               </button>
             ))}
           </div>
-          {tab === 'all' && (
-            <label className="hidden shrink-0 items-center gap-2 text-sm text-muted sm:flex">
-              <span className="sr-only sm:not-sr-only">Sort</span>
-              <select
-                value={sort} onChange={e => setSort(e.target.value as Sort)}
-                className="min-h-10 rounded-lg border border-line-strong bg-surface px-3 text-sm text-ink"
-              >
-                {SORTS.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
-              </select>
-            </label>
-          )}
+          {tab === 'all' && <div className="hidden shrink-0 sm:block">{sortSelect}</div>}
         </div>
       </div>
 
-      <div role="tabpanel" className="mx-auto w-full max-w-7xl px-4 pt-5 sm:px-6 lg:px-8">
+      <div role="tabpanel" className="mx-auto w-full max-w-7xl px-4 pt-4 sm:px-6 sm:pt-5 lg:px-8">
         {tab === 'all' && (
-          <div className="mb-4 flex items-center justify-between sm:hidden">
-            <p className="text-sm text-muted">{query.isPending ? 'Loading…' : `${total} ${total === 1 ? 'product' : 'products'}`}</p>
-            <label className="flex items-center gap-2 text-sm text-muted">
-              <span>Sort</span>
-              <select value={sort} onChange={e => setSort(e.target.value as Sort)} className="min-h-10 rounded-lg border border-line-strong bg-surface px-2 text-sm text-ink">
-                {SORTS.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
-              </select>
-            </label>
+          <div className="mb-3 flex items-center justify-between gap-3 sm:hidden">
+            <p className="text-sm text-muted">{query.isPending ? t('common.loading') : total === 1 ? t('list.oneProduct') : t('list.nProducts', { n: total })}</p>
+            {sortSelect}
           </div>
         )}
 
         {query.isPending ? (
           <>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
               {Array.from({ length: 8 }, (_, i) => <ProductCardSkeleton key={i} />)}
             </div>
             <SlowHint show={slow} />
@@ -110,21 +106,21 @@ export function ProductExplorer({ title, subtitle, q, category, initialTab = 'al
           <ErrorState message={errorMessage(query.error)} onRetry={() => query.refetch()} />
         ) : products.length === 0 ? (
           <EmptyState
-            icon="search" title="Nothing found"
-            message={q ? `We couldn't find anything for "${q}".` : 'No products here yet. Check back soon.'}
-            action={onClearFilters && <Button onClick={onClearFilters}>Clear search</Button>}
+            icon="search" title={t('list.nothing')}
+            message={q ? t('list.noneFor', { q }) : t('list.empty')}
+            action={onClearFilters && <Button onClick={onClearFilters}>{t('list.clearAll')}</Button>}
           />
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
               {products.map(p => <ProductCard key={p.id} product={p} showSold={tab !== 'new'} />)}
             </div>
-            <div className="mt-8 space-y-2 text-center">
-              <p className="text-sm text-muted">Showing {products.length} of {total}</p>
+            <div className="mt-6 space-y-2 text-center sm:mt-8">
+              <p className="text-sm text-muted">{t('list.showing', { shown: products.length, total })}</p>
               {query.hasNextPage && (
                 <button type="button" onClick={() => query.fetchNextPage()} disabled={query.isFetchingNextPage}
                   className="min-h-12 w-full rounded-xl border border-ink bg-surface text-[15px] font-semibold transition-colors hover:bg-ink hover:text-white disabled:opacity-60">
-                  {query.isFetchingNextPage ? 'Loading…' : 'Load more'}
+                  {query.isFetchingNextPage ? t('common.loading') : t('list.loadMore')}
                 </button>
               )}
             </div>

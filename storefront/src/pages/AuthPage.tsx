@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { login, register as registerAccount } from '../api/shop';
 import { errorMessage } from '../api/client';
+import { useT } from '../i18n';
 import { emailRule, nameRule, passwordRule, phoneRule } from '../lib/validation';
 import { useAuth } from '../store/auth';
 import { useToast } from '../store/toast';
@@ -17,6 +18,7 @@ interface FormValues { name: string; phone: string; email: string; password: str
 const safeNext = (next: string | null) => (next && next.startsWith('/') && !next.startsWith('//') ? next : '/');
 
 export default function AuthPage({ mode }: { mode: 'login' | 'register' }) {
+  const t = useT();
   const isRegister = mode === 'register';
   const [params] = useSearchParams();
   const next = safeNext(params.get('next'));
@@ -38,7 +40,7 @@ export default function AuthPage({ mode }: { mode: 'login' | 'register' }) {
         : await login({ phone: values.phone, password: values.password });
       signIn(result.token, result.account);
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      show(isRegister ? `Welcome, ${result.account.name.split(' ')[0]}!` : 'Signed in');
+      show(isRegister ? t('auth.welcome', { name: result.account.name.split(' ')[0] ?? '' }) : t('auth.signedIn'));
       navigate(next, { replace: true });
     } catch (err) {
       setFormError(errorMessage(err));
@@ -48,39 +50,37 @@ export default function AuthPage({ mode }: { mode: 'login' | 'register' }) {
   const other = `${isRegister ? '/login' : '/register'}${params.get('next') ? `?next=${encodeURIComponent(next)}` : ''}`;
 
   return (
-    <div className="mx-auto w-full max-w-md px-4 py-8 sm:py-14">
-      <Seo title={isRegister ? 'Create account' : 'Sign in'} />
-      <div className="rounded-3xl border border-line bg-surface p-6 sm:p-8">
-        <h1 className="text-2xl font-bold tracking-tight">{isRegister ? 'Create your account' : 'Welcome back'}</h1>
-        <p className="mt-1 text-sm text-muted">
-          {isRegister ? 'An account lets you place orders and follow them. It takes a minute.' : 'Sign in with your phone number.'}
-        </p>
+    <div className="mx-auto w-full max-w-md px-4 py-6 sm:py-14">
+      <Seo title={isRegister ? t('auth.create') : t('auth.signIn')} />
+      <div className="rounded-2xl border border-line bg-surface p-5 sm:rounded-3xl sm:p-8">
+        <h1 className="text-xl font-bold tracking-tight sm:text-2xl">{isRegister ? t('auth.createTitle') : t('auth.welcomeBack')}</h1>
+        <p className="mt-1 text-sm text-muted">{isRegister ? t('auth.createSub') : t('auth.loginSub')}</p>
 
-        <form onSubmit={onSubmit} noValidate className="mt-6 space-y-4">
+        <form onSubmit={onSubmit} noValidate className="mt-5 space-y-4 sm:mt-6">
           {isRegister && (
-            <TextField label="Full name" autoComplete="name" {...register('name', nameRule)} error={errors.name?.message} />
+            <TextField label={t('auth.name')} autoComplete="name" {...register('name', nameRule(t))} error={errors.name?.message} />
           )}
           <TextField
-            label="Phone number" type="tel" inputMode="tel" autoComplete="tel" placeholder="0911 234 567"
-            {...register('phone', phoneRule)} error={errors.phone?.message}
+            label={t('auth.phone')} type="tel" inputMode="tel" autoComplete="tel" placeholder="0911 234 567"
+            {...register('phone', phoneRule(t))} error={errors.phone?.message}
           />
           {isRegister && (
-            <TextField label="Email" optional type="email" autoComplete="email" {...register('email', emailRule)} error={errors.email?.message} />
+            <TextField label={t('auth.email')} optional type="email" autoComplete="email" {...register('email', emailRule(t))} error={errors.email?.message} />
           )}
           <TextField
-            label="Password" type="password" autoComplete={isRegister ? 'new-password' : 'current-password'}
-            hint={isRegister ? 'At least 6 characters' : undefined}
-            {...register('password', isRegister ? passwordRule : { required: 'Enter your password' })} error={errors.password?.message}
+            label={t('auth.password')} type="password" autoComplete={isRegister ? 'new-password' : 'current-password'}
+            hint={isRegister ? t('auth.passwordHint') : undefined}
+            {...register('password', isRegister ? passwordRule(t) : { required: t('auth.enterPassword') })} error={errors.password?.message}
           />
           <FormAlert message={formError} />
           <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? 'Please wait…' : isRegister ? 'Create account' : 'Sign in'}
+            {isSubmitting ? t('auth.wait') : isRegister ? t('auth.create') : t('auth.signIn')}
           </Button>
         </form>
 
         <p className="mt-6 text-center text-sm text-muted">
-          {isRegister ? 'Already have an account?' : 'New to Chala Mobile?'}{' '}
-          <Link to={other} className="font-semibold text-brand-ink underline underline-offset-2">{isRegister ? 'Sign in' : 'Create an account'}</Link>
+          {isRegister ? t('auth.haveAcc') : t('auth.newTo')}{' '}
+          <Link to={other} className="font-semibold text-link underline underline-offset-2">{isRegister ? t('auth.signIn') : t('auth.createAcc')}</Link>
         </p>
       </div>
     </div>
