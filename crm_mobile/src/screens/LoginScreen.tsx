@@ -88,15 +88,15 @@ export default function LoginScreen() {
         >
           <View style={styles.brand}>
             <Image
-              source={require('../assets/phone.png')}
+              source={require('../assets/logo.png')}
               style={styles.phone}
               resizeMode="contain"
-              accessibilityLabel="ChalaMob"
+              accessibilityLabel="Chala Mobile"
               accessibilityIgnoresInvertColors
             />
             <View style={styles.brandRow}>
-              <Text style={styles.brandMain}>CHALA</Text>
-              <Text style={styles.brandAccent}>MOB</Text>
+              <Text style={styles.brandMain}>Chala </Text>
+              <Text style={styles.brandAccent}>Mobile</Text>
             </View>
             <Text style={styles.brandSub}>Business management</Text>
           </View>
@@ -210,12 +210,11 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bgDeep },
   scroll: { flexGrow: 1, justifyContent: 'center', padding: layout.screenX, paddingTop: spacing['3xl'], paddingBottom: spacing['3xl'] },
 
-  // The phone sits straight on the page: no tile, no background.
   brand: { alignItems: 'center', marginBottom: spacing['3xl'] },
-  phone: { width: 66, height: 134, marginBottom: spacing.lg },
+  phone: { width: 76, height: 76, marginBottom: spacing.lg },
   brandRow: { flexDirection: 'row' },
-  brandMain: { fontSize: 30, fontWeight: '900', color: colors.navy, letterSpacing: 1 },
-  brandAccent: { fontSize: 30, fontWeight: '900', color: colors.red, letterSpacing: 1 },
+  brandMain: { fontSize: 30, fontWeight: '900', color: colors.text1 },
+  brandAccent: { fontSize: 30, fontWeight: '500', color: colors.amberDark },
   brandSub: { fontSize: 14, color: colors.text2, marginTop: 4 },
 
   card: {

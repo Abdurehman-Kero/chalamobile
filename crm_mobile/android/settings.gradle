@@ -4,3 +4,14 @@ extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autoli
 rootProject.name = 'ChalaMobCRM'
 include ':app'
 includeBuild('../node_modules/@react-native/gradle-plugin')
+
+// Some libraries (the photo picker among them) pin an older Android API level that is not installed
+// on the build machine, which makes the build wait for a download that never finishes. Build every
+// library with the same level as the app (keep this number equal to compileSdkVersion in build.gradle).
+gradle.beforeProject { project ->
+    project.pluginManager.withPlugin('com.android.library') {
+        project.extensions.getByName('androidComponents').finalizeDsl { dsl ->
+            dsl.compileSdk = 37
+        }
+    }
+}

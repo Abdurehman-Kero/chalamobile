@@ -260,6 +260,7 @@ export default function InventoryScreen() {
         <View style={styles.rowEnd}>
           <Text style={styles.price}>{formatBr(item.selling_price)}</Text>
           {!item.is_published && <Text style={styles.draft}>Not on web</Text>}
+          {item.is_published && !item.primary_image && !isLocalId(item.id) && <Text style={styles.noPhoto}>No photo yet</Text>}
           {canManageStock && item.stock <= lowAt && (
             <Button title="Restock" size="sm" variant="secondary" onPress={() => openRestock(item)} style={styles.restockBtn} />
           )}
@@ -417,6 +418,7 @@ const styles = StyleSheet.create({
   rowSpec: { fontSize: 13, color: colors.text2, marginTop: 2 },
   price: { fontSize: 15, fontWeight: '900', color: colors.navy },
   draft: { fontSize: 11, color: colors.text3, marginTop: 4, fontWeight: '600' },
+  noPhoto: { fontSize: 11, color: colors.amberDark, marginTop: 4, fontWeight: '700' },
 
   selectorLabel: { fontSize: 11, fontWeight: '700', color: colors.label, letterSpacing: 0.6, marginBottom: 6 },
   twoCol: { flexDirection: 'row' },
