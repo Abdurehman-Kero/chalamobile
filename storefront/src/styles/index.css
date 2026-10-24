@@ -74,7 +74,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
 
 /* A new page eases in instead of snapping into place. */
 @keyframes page-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-.page-in { animation: page-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both; }
+/* "backwards", not "both": an animation that keeps filling leaves a transform on the page, and a
+   transformed parent makes the bars fixed to the bottom of the screen stick to the page's end. */
+.page-in { animation: page-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
 
 /* The thin bar at the top of the page while data loads. */
 @keyframes sweep { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }
