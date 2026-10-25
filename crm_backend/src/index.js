@@ -1,8 +1,10 @@
 require('dotenv').config();
+require('./env');
 const express = require('express');
 const cors    = require('cors');
 const helmet  = require('helmet');
 const compression = require('compression');
+const { mailConfigured } = require('./services/mail');
 const morgan  = require('morgan');
 const path    = require('path');
 
@@ -47,6 +49,8 @@ app.use('/api/reports',   require('./routes/reports.routes'));
 app.get('/health', (req, res) => res.json({
   status: 'ok', service: 'ChalaMob CRM API', time: new Date(),
   commit: (process.env.RENDER_GIT_COMMIT || '').slice(0, 7) || undefined,
+  // Whether the "forgot password" settings reached this server (never shows the values).
+  passwordReset: { email: mailConfigured(), recoveryKey: !!(process.env.OWNER_RECOVERY_KEY || '').trim() },
 }));
 
 // ── 404 handler ───────────────────────────────────────

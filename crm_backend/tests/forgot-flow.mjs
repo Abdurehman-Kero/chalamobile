@@ -1,5 +1,6 @@
 // Forgotten password: emailed code (development prints it to the server log) and the owner's recovery key.
-// Needs a running server on port 3055, started with OWNER_RECOVERY_KEY=test-recovery-key-123 and its output
+// Needs a running server on port 3055, started with OWNER_RECOVERY_KEY=test-recovery-key-123, RESET_CODE_TO_LOG=true,
+// and BREVO_API_KEY= / MAIL_FROM= set to empty (so no real email is sent), and its output
 // saved to the file given as the first argument, on a freshly seeded database:  node tests/forgot-flow.mjs /tmp/be.log
 import fs from 'node:fs';
 const LOG = process.argv[2];

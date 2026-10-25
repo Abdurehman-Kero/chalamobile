@@ -5,6 +5,7 @@
 // wake-up several seconds faster. The seeds only ever fill empty tables (see db/seedGuard.js),
 // so running them on every start is safe.
 require('dotenv').config();
+require('./env');
 const knexLib = require('knex');
 const config = require('../knexfile');
 const { explainDbError } = require('./db/explain');

@@ -559,7 +559,7 @@ export const om: Record<string, string> = {
   "Hello {name}, we are working on your {device}. Chala Mobile": "Akkam {name}, {device} keessan irratti hojjechaa jirra. Chala Mobile",
   "Message the customer": "Maamilaaf ergaa ergi",
   // forgotten password
-  "If this email belongs to an account, a 6-digit code was sent to it. It works for 15 minutes.": "Imeeliin kun akkaawuntii kan qabu yoo ta'e, koodiin lakkoofsa 6 itti ergameera. Daqiiqaa 15 hojjeta.",
+  "If this email belongs to an account, a 6-digit code was sent to it. It works for 15 minutes. Look in the spam folder too.": "Imeeliin kun akkaawuntii kan qabu yoo ta'e, koodiin lakkoofsa 6 itti ergameera. Daqiiqaa 15 hojjeta. Spam keessattis ilaalaa.",
   "Codes by email are not set up. The shop owner can continue with the recovery key. Everyone else: ask the owner to reset your password in Team.": "Koodiin imeeliin hin qindaa'ine. Abbaan suuqii furtuu deebisuun itti fufuu danda'a. Warri kaan: abbaa suuqii Gareen keessatti jecha darbii keessan akka deebisu gaafadhaa.",
   "Codes by email are not set up yet. Ask the shop owner to reset your password in Team.": "Koodiin imeeliin amma iyyuu hin qindaa'ine. Abbaa suuqii Gareen keessatti jecha darbii keessan akka deebisu gaafadhaa.",
   "The server needs to be updated before this works. Please tell the shop owner.": "Kun hojjechuu isaaf dura serveriin haaromfamuu qaba. Maaloo abbaa suuqii beeksisaa.",

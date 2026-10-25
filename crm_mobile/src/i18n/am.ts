@@ -559,7 +559,7 @@ export const am: Record<string, string> = {
   "Hello {name}, we are working on your {device}. Chala Mobile": "ሰላም {name}፣ {device} ላይ እየሰራን ነው። ጫላ ሞባይል",
   "Message the customer": "ለደንበኛው መልዕክት ላክ",
   // forgotten password
-  "If this email belongs to an account, a 6-digit code was sent to it. It works for 15 minutes.": "ይህ ኢሜይል መለያ ካለው፣ ባለ 6 አሃዝ ኮድ ተልኮለታል። ለ15 ደቂቃ ይሰራል።",
+  "If this email belongs to an account, a 6-digit code was sent to it. It works for 15 minutes. Look in the spam folder too.": "ይህ ኢሜይል መለያ ካለው፣ ባለ 6 አሃዝ ኮድ ተልኮለታል። ለ15 ደቂቃ ይሰራል። በአይፈለጌ መልዕክት (spam) አቃፊም ይመልከቱ።",
   "Codes by email are not set up. The shop owner can continue with the recovery key. Everyone else: ask the owner to reset your password in Team.": "በኢሜይል ኮድ መላክ አልተዘጋጀም። የሱቁ ባለቤት በማስመለሻ ቁልፍ መቀጠል ይችላል። ሌሎች፡ ባለቤቱን በቡድን ገጽ ውስጥ የይለፍ ቃልዎን እንዲያስጀምር ይጠይቁ።",
   "Codes by email are not set up yet. Ask the shop owner to reset your password in Team.": "በኢሜይል ኮድ መላክ ገና አልተዘጋጀም። የሱቁን ባለቤት በቡድን ገጽ ውስጥ የይለፍ ቃልዎን እንዲያስጀምር ይጠይቁ።",
   "The server needs to be updated before this works. Please tell the shop owner.": "ይህ እንዲሰራ ሰርቨሩ መዘመን አለበት። እባክዎ ለሱቁ ባለቤት ይንገሩ።",

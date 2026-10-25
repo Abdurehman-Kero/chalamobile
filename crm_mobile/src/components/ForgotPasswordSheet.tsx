@@ -50,7 +50,7 @@ export const ForgotPasswordSheet: React.FC<Props> = ({ visible, onClose, initial
       const res = await authApi.forgotPassword(email.trim());
       if (res.method === 'email') {
         setStep('code');
-        setNotice(t('If this email belongs to an account, a 6-digit code was sent to it. It works for 15 minutes.'));
+        setNotice(t('If this email belongs to an account, a 6-digit code was sent to it. It works for 15 minutes. Look in the spam folder too.'));
       } else {
         setNotice(res.recovery_key
           ? t('Codes by email are not set up. The shop owner can continue with the recovery key. Everyone else: ask the owner to reset your password in Team.')

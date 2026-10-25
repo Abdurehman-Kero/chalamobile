@@ -103,7 +103,9 @@ const recoveryKey = () => (process.env.OWNER_RECOVERY_KEY || '').trim();
 exports.forgot = async (req, res) => {
   try {
     const email = String(req.body.email).trim().toLowerCase();
-    const canMail = mailConfigured() || process.env.NODE_ENV !== 'production';
+    // Only a developer who asks for it (RESET_CODE_TO_LOG=true) gets the code printed in the server log instead of emailed.
+    const logOnly = !mailConfigured() && process.env.RESET_CODE_TO_LOG === 'true';
+    const canMail = mailConfigured() || logOnly;
     // The answer is the same whether or not the address belongs to someone, so it cannot be used to find out who has an account.
     const answer = { method: canMail ? 'email' : 'none', recovery_key: !!recoveryKey() };
     if (!canMail) return res.json(answer);
@@ -136,7 +138,16 @@ It works for ${CODE_MINUTES} minutes. If you did not ask for it, ignore this mes
 Chala Mobile`,
         });
       } catch (err) {
+        // The mail service refused it (wrong key, sender not verified...). Say so, instead of pretending it was sent.
         console.error('[auth.forgot] could not send the email:', err.message);
+        await db('password_resets').where({ user_id: user.id }).whereNull('used_at').del();   // so asking again is not blocked by the wait
+        const sender = /sender|domain/i.test(err.message);
+        return res.status(502).json({
+          error: sender
+            ? 'The email could not be sent: the sender address is not verified at the mail service yet. Ask the shop owner to verify it (Brevo > Senders).'
+            : 'The email could not be sent. The mail service on the server is not set up correctly. Ask the shop owner to check it.',
+          code: 'MAIL_FAILED',
+        });
       }
     } else {
       console.log(`[auth.forgot] (development, no mail service) code for ${user.email}: ${code}`);

@@ -18,6 +18,10 @@ async function sendMail({ to, subject, text }) {
       body: JSON.stringify({ sender: { email: FROM(), name: NAME() }, to: [{ email: to }], subject, textContent: text }),
     });
     if (!res.ok) throw new Error(`Brevo ${res.status}: ${await res.text()}`);
+    // Brevo says "accepted" first and may refuse a moment later (most often: the sender address was never
+    // verified there). Ask once or twice, so a refusal is reported instead of being taken for a sent email.
+    const { messageId } = await res.json().catch(() => ({}));
+    if (messageId) await assertNotRefused(messageId);
     return;
   }
 
@@ -27,6 +31,29 @@ async function sendMail({ to, subject, text }) {
     body: JSON.stringify({ from: `${NAME()} <${FROM()}>`, to: [to], subject, text }),
   });
   if (!res.ok) throw new Error(`Resend ${res.status}: ${await res.text()}`);
+}
+
+const wait = (ms) => new Promise(r => setTimeout(r, ms));
+
+async function assertNotRefused(messageId) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    // eslint-disable-next-line no-await-in-loop
+    await wait(1200);
+    try {
+      const url = `https://api.brevo.com/v3/smtp/statistics/events?messageId=${encodeURIComponent(messageId)}&limit=10`;
+      // eslint-disable-next-line no-await-in-loop
+      const res = await fetch(url, { headers: { 'api-key': process.env.BREVO_API_KEY, accept: 'application/json' } });
+      if (!res.ok) return;                       // cannot look it up: assume it is going out
+      // eslint-disable-next-line no-await-in-loop
+      const { events = [] } = await res.json();
+      const refused = events.find(e => ['error', 'blocked', 'invalid', 'hardBounces'].includes(e.event));
+      if (refused) throw Object.assign(new Error(refused.reason || `Brevo: ${refused.event}`), { refused: true });
+      if (events.some(e => ['delivered', 'sent', 'deferred', 'opened'].includes(e.event))) return;
+    } catch (err) {
+      if (err.refused) throw err;
+      return;
+    }
+  }
 }
 
 module.exports = { mailConfigured, sendMail };
